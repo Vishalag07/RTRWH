@@ -1,0 +1,28 @@
+{
+  "app_title": "மழைநீர் சேகரிப்பு & செயற்கை நிரப்பு",
+  "inputs": "உள்ளீடுகள்",
+  "user_name": "பயனர் பெயர்",
+  "location": "இடம்",
+  "dwellers": "வசிப்போர் எண்ணிக்கை",
+  "rooftop_area": "மேல் தளம் பரப்பு (m²)",
+  "open_space_area": "திறந்த பரப்பு (m²)",
+  "submit": "மதிப்பீடு",
+  "language.choose_language": "மொழியைத் தேர்ந்தெடுக்கவும்",
+  "navbar.assessment": "மதிப்பீடு",
+  "navbar.rainfall_prediction": "மழை முன்னறிவிப்பு",
+  "navbar.visualization": "காட்சிப்படுத்தல்",
+  "navbar.gamification": "விளையாட்டு மயமாக்கல்",
+  "navbar.about_us": "எங்களைப் பற்றி",
+  "navbar.login": "உள்நுழைவு",
+  "navbar.sign_up": "பதிவு செய்க",
+  "navbar.ai_assistant": "AI உதவியாளர்",
+  "navbar.voice_assistant": "குரல் உதவியாளர்",
+  "navbar.close": "மூடு",
+  "navbar.start_voice_command": "குரல் கட்டளையைத் தொடங்கு",
+  "navbar.stop_listening": "கேட்டலை நிறுத்து",
+  "navbar.listening": "கேட்டுக்கொண்டிருக்கிறேன்...",
+  "navbar.speak_command": "இப்போது உங்கள் கட்டளையைச் சொல்லுங்கள்",
+  "navbar.click_microphone": "குரல் கட்டளையைத் தொடங்க மைக்ரோஃபோனைக் கிளிக் செய்யுங்கள்"
+}
+
+

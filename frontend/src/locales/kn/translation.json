@@ -1,0 +1,28 @@
+{
+  "app_title": "ಮಳೆ ನೀರಿನ ಸಂಗ್ರಹಣೆ ಮತ್ತು ಕೃತಕ ರೀಚಾರ್ಜ್",
+  "inputs": "ಇನ್‌ಪುಟ್‌ಗಳು",
+  "user_name": "ಬಳಕೆದಾರರ ಹೆಸರು",
+  "location": "ಸ್ಥಳ",
+  "dwellers": "ನಿವಾಸಿಗಳ ಸಂಖ್ಯೆ",
+  "rooftop_area": "ಮೇಲ್ಛಾವಣಿ ಪ್ರದೇಶ (m²)",
+  "open_space_area": "ಬಯಲು ಪ್ರದೇಶ (m²)",
+  "submit": "ಮೌಲ್ಯಮಾಪನ",
+  "language.choose_language": "ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "navbar.assessment": "ಮೌಲ್ಯಮಾಪನ",
+  "navbar.rainfall_prediction": "ಮಳೆ ಮುನ್ಸೂಚನೆ",
+  "navbar.visualization": "ದೃಶ್ಯೀಕರಣ",
+  "navbar.gamification": "ಗೇಮಿಫಿಕೇಶನ್",
+  "navbar.about_us": "ನಮ್ಮ ಬಗ್ಗೆ",
+  "navbar.login": "ಲಾಗಿನ್",
+  "navbar.sign_up": "ಸೈನ್ ಅಪ್",
+  "navbar.ai_assistant": "AI ಸಹಾಯಕ",
+  "navbar.voice_assistant": "ವಾಯ್ಸ್ ಸಹಾಯಕ",
+  "navbar.close": "ಮುಚ್ಚಿ",
+  "navbar.start_voice_command": "ವಾಯ್ಸ್ ಆದೇಶ ಪ್ರಾರಂಭಿಸಿ",
+  "navbar.stop_listening": "ಕೇಳುವುದನ್ನು ನಿಲ್ಲಿಸಿ",
+  "navbar.listening": "ಕೇಳುತ್ತಿದ್ದೇನೆ...",
+  "navbar.speak_command": "ಈಗ ನಿಮ್ಮ ಆದೇಶವನ್ನು ಹೇಳಿ",
+  "navbar.click_microphone": "ವಾಯ್ಸ್ ಆದೇಶ ಪ್ರಾರಂಭಿಸಲು ಮೈಕ್ರೋಫೋನ್‌ಗೆ ಕ್ಲಿಕ್ ಮಾಡಿ"
+}
+
+

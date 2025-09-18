@@ -1,0 +1,28 @@
+{
+  "app_title": "বৃষ্টির জল সংগ্রহ ও কৃত্রিম রিচার্জ",
+  "inputs": "ইনপুট",
+  "user_name": "ব্যবহারকারীর নাম",
+  "location": "অবস্থান",
+  "dwellers": "বাসিন্দাদের সংখ্যা",
+  "rooftop_area": "ছাদের এলাকা (m²)",
+  "open_space_area": "খোলা জায়গা (m²)",
+  "submit": "মূল্যায়ন",
+  "language.choose_language": "ভাষা নির্বাচন করুন",
+  "navbar.assessment": "মূল্যায়ন",
+  "navbar.rainfall_prediction": "বৃষ্টিপাতের পূর্বাভাস",
+  "navbar.visualization": "ভিজ্যুয়ালাইজেশন",
+  "navbar.gamification": "গেমিফিকেশন",
+  "navbar.about_us": "আমাদের সম্পর্কে",
+  "navbar.login": "লগইন",
+  "navbar.sign_up": "সাইন আপ",
+  "navbar.ai_assistant": "AI সহায়ক",
+  "navbar.voice_assistant": "ভয়েস সহায়ক",
+  "navbar.close": "বন্ধ করুন",
+  "navbar.start_voice_command": "ভয়েস কমান্ড শুরু করুন",
+  "navbar.stop_listening": "শোনা বন্ধ করুন",
+  "navbar.listening": "শুনছি...",
+  "navbar.speak_command": "এখন আপনার কমান্ড বলুন",
+  "navbar.click_microphone": "ভয়েস কমান্ড শুরু করতে মাইক্রোফোনে ক্লিক করুন"
+}
+
+

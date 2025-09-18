@@ -1,0 +1,28 @@
+{
+  "app_title": "ਬਰਸਾਤੀ ਪਾਣੀ ਸੰਭਾਲ ਅਤੇ ਕ੍ਰਿਤਰਿਮ ਰੀਚਾਰਜ",
+  "inputs": "ਇਨਪੁੱਟ",
+  "user_name": "ਯੂਜ਼ਰ ਨਾਮ",
+  "location": "ਟਿਕਾਣਾ",
+  "dwellers": "ਰਹਿਣ ਵਾਲਿਆਂ ਦੀ ਗਿਣਤੀ",
+  "rooftop_area": "ਛੱਤ ਦਾ ਖੇਤਰਫਲ (m²)",
+  "open_space_area": "ਖੁੱਲ੍ਹੀ ਜਗ੍ਹਾ (m²)",
+  "submit": "ਮੂਲਿਆਂਕਨ",
+  "language.choose_language": "ਭਾਸ਼ਾ ਚੁਣੋ",
+  "navbar.assessment": "ਮੂਲਿਆਂਕਨ",
+  "navbar.rainfall_prediction": "ਬਾਰਸ਼ ਦਾ ਪੂਰਵਾਨੁਮਾਨ",
+  "navbar.visualization": "ਵਿਜ਼ੂਅਲਾਈਜ਼ੇਸ਼ਨ",
+  "navbar.gamification": "ਗੇਮੀਫਿਕੇਸ਼ਨ",
+  "navbar.about_us": "ਸਾਡੇ ਬਾਰੇ",
+  "navbar.login": "ਲੌਗ ਇਨ",
+  "navbar.sign_up": "ਸਾਈਨ ਅੱਪ",
+  "navbar.ai_assistant": "AI ਸਹਾਇਕ",
+  "navbar.voice_assistant": "ਵੌਇਸ ਸਹਾਇਕ",
+  "navbar.close": "ਬੰਦ ਕਰੋ",
+  "navbar.start_voice_command": "ਵੌਇਸ ਕਮਾਂਡ ਸ਼ੁਰੂ ਕਰੋ",
+  "navbar.stop_listening": "ਸੁਣਨਾ ਬੰਦ ਕਰੋ",
+  "navbar.listening": "ਸੁਣ ਰਹੇ ਹਾਂ...",
+  "navbar.speak_command": "ਹੁਣ ਆਪਣਾ ਕਮਾਂਡ ਬੋਲੋ",
+  "navbar.click_microphone": "ਵੌਇਸ ਕਮਾਂਡ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਮਾਈਕ੍ਰੋਫੋਨ 'ਤੇ ਕਲਿਕ ਕਰੋ"
+}
+
+

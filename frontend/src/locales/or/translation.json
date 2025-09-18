@@ -1,0 +1,28 @@
+{
+  "app_title": "ବର୍ଷା ଜଳ ସଂଗ୍ରହ ଏବଂ କୃତ୍ରିମ ପୁନର୍ଭର୍ତ୍ତି",
+  "inputs": "ଇନ୍ପୁଟ୍ସ",
+  "user_name": "ଉପଯୋଗକର୍ତ୍ତା ନାମ",
+  "location": "ଅବସ୍ଥାନ",
+  "dwellers": "ନିବାସୀଙ୍କ ସଂଖ୍ୟା",
+  "rooftop_area": "ଛାଦ ଅଞ୍ଚଳ (m²)",
+  "open_space_area": "ଖୋଲା ଅଞ୍ଚଳ (m²)",
+  "submit": "ମୂଲ୍ୟାଙ୍କନ",
+  "language.choose_language": "ଭାଷା ବାଛନ୍ତୁ",
+  "navbar.assessment": "ମୂଲ୍ୟାଙ୍କନ",
+  "navbar.rainfall_prediction": "ବର୍ଷା ପୂର୍ବାନୁମାନ",
+  "navbar.visualization": "ଭିଜୁଆଲାଇଜେସନ୍",
+  "navbar.gamification": "ଗେମିଫିକେସନ୍",
+  "navbar.about_us": "ଆମ ବିଷୟରେ",
+  "navbar.login": "ଲଗଇନ୍",
+  "navbar.sign_up": "ସାଇନ୍ ଅପ୍",
+  "navbar.ai_assistant": "AI ସହାୟକ",
+  "navbar.voice_assistant": "ଭଏସ୍ ସହାୟକ",
+  "navbar.close": "ବନ୍ଦ କରନ୍ତୁ",
+  "navbar.start_voice_command": "ଭଏସ୍ କମାଣ୍ଡ ଆରମ୍ଭ କରନ୍ତୁ",
+  "navbar.stop_listening": "ଶୁଣିବା ବନ୍ଦ କରନ୍ତୁ",
+  "navbar.listening": "ଶୁଣୁଛି...",
+  "navbar.speak_command": "ଏବେ ଆପଣଙ୍କ କମାଣ୍ଡ କୁହନ୍ତୁ",
+  "navbar.click_microphone": "ଭଏସ୍ କମାଣ୍ଡ ଆରମ୍ଭ କରିବା ପାଇଁ ମାଇକ୍ରୋଫୋନ୍ ଉପରେ କ୍ଲିକ୍ କରନ୍ତୁ"
+}
+
+

@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+
+
+/* Custom animations and utilities */
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-slow {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@layer utilities {
+  .animate-in {
+    animation: fade-in-up 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-in-slow {
+    animation: fade-in-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .float-slow {
+    animation: float-slow 4s ease-in-out infinite;
+  }
+  .pressable {
+    @apply transition active:scale-[0.98];
+  }
+  .hover-raise {
+    @apply transition hover:-translate-y-[1px] hover:shadow-md;
+  }
+  .shimmer {
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.6) 50%, rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s linear infinite;
+  }
+}
+
+

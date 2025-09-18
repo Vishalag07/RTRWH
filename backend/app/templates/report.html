@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>RTRWH Assessment Report</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #0f172a; }
+      h1, h2 { margin: 0 0 8px; }
+      .section { margin: 12px 0; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #e5e7eb; padding: 6px; text-align: left; }
+      th { background: #f8fafc; }
+      .note { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; }
+      .badge { display: inline-block; background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; padding: 2px 6px; border-radius: 9999px; font-size: 10px; }
+      .muted { color: #475569; }
+    </style>
+  </head>
+  <body>
+    <h1>💧 Rooftop Rainwater Harvesting & Artificial Recharge</h1>
+    <div class="section">
+      <h2>🧭 Inputs <span class="badge">AI-ready</span></h2>
+      <table>
+        <tr><th>User</th><td>{{ assessment.user_name }}</td></tr>
+        <tr><th>Location</th><td>{{ assessment.location_desc }} ({{ assessment.latitude }}, {{ assessment.longitude }})</td></tr>
+        <tr><th>Dwellers</th><td>{{ assessment.num_dwellers }}</td></tr>
+        <tr><th>Rooftop Area (m²)</th><td>{{ assessment.rooftop_area_m2 }}</td></tr>
+        <tr><th>Open Space Area (m²)</th><td>{{ assessment.open_space_area_m2 }}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>🌧️ Rainfall & Runoff</h2>
+      <table>
+        <tr><th>Annual Rainfall (mm)</th><td>{{ assessment.results.runoff.annual_rainfall_mm }}</td></tr>
+        <tr><th>Runoff Coefficient</th><td>{{ assessment.results.runoff.runoff_coefficient }}</td></tr>
+        <tr><th>Annual Runoff (L)</th><td>{{ assessment.results.runoff.annual_runoff_volume_liters | round(0) }}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>🏗️ Recommended Structure</h2>
+      <table>
+        <tr><th>Type</th><td>{{ assessment.results.structure.structure_type }}</td></tr>
+        <tr><th>Dimensions</th><td>{{ assessment.results.structure.dimensions }}</td></tr>
+        <tr><th>Storage (L)</th><td>{{ assessment.results.structure.storage_volume_liters | round(0) }}</td></tr>
+        <tr><th>Notes</th><td>{{ assessment.results.structure.notes }}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>🪨 Aquifer</h2>
+      <table>
+        <tr><th>Type</th><td>{{ assessment.results.aquifer.aquifer_type }}</td></tr>
+        <tr><th>GW Depth (m)</th><td>{{ assessment.results.aquifer.gw_depth_m }}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>💹 Cost & Benefit</h2>
+      <table>
+        <tr><th>CAPEX</th><td>{{ assessment.results.cost.capex_currency | round(0) }}</td></tr>
+        <tr><th>OPEX/year</th><td>{{ assessment.results.cost.opex_currency_per_year | round(0) }}</td></tr>
+        <tr><th>Water Savings (L/year)</th><td>{{ assessment.results.cost.water_savings_liters_per_year | round(0) }}</td></tr>
+        <tr><th>Payback (years)</th><td>{{ assessment.results.cost.payback_years | round(1) }}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>🔁 Estimated Recharge Potential</h2>
+      <p><strong>{{ assessment.results.recharge_potential_liters | round(0) }}</strong> liters/year</p>
+    </div>
+
+    {% if ai_commentary %}
+    <div class="section">
+      <h2>🧠 AI Commentary</h2>
+      <div class="note">{{ ai_commentary }}</div>
+    </div>
+    {% endif %}
+  </body>
+  </html>
+
+

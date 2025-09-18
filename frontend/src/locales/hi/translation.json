@@ -1,0 +1,28 @@
+{
+  "app_title": "वर्षा जल-संग्रह एवं कृत्रिम रिचार्ज",
+  "inputs": "इनपुट",
+  "user_name": "उपयोगकर्ता नाम",
+  "location": "स्थान",
+  "dwellers": "निवासियों की संख्या",
+  "rooftop_area": "छत क्षेत्र (m²)",
+  "open_space_area": "खुला क्षेत्र (m²)",
+  "submit": "आकलन करें",
+  "language.choose_language": "भाषा चुनें",
+  "navbar.assessment": "आकलन",
+  "navbar.rainfall_prediction": "वर्षा पूर्वानुमान",
+  "navbar.visualization": "विज़ुअलाइज़ेशन",
+  "navbar.gamification": "गेमिफिकेशन",
+  "navbar.about_us": "हमारे बारे में",
+  "navbar.login": "लॉगिन",
+  "navbar.sign_up": "साइन अप",
+  "navbar.ai_assistant": "AI सहायक",
+  "navbar.voice_assistant": "वॉइस सहायक",
+  "navbar.close": "बंद करें",
+  "navbar.start_voice_command": "वॉइस कमांड शुरू करें",
+  "navbar.stop_listening": "सुनना बंद करें",
+  "navbar.listening": "सुन रहे हैं...",
+  "navbar.speak_command": "अब अपना कमांड बोलें",
+  "navbar.click_microphone": "वॉइस कमांड शुरू करने के लिए माइक्रोफोन पर क्लिक करें"
+}
+
+

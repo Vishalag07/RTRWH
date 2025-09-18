@@ -1,0 +1,28 @@
+{
+  "app_title": "മഴവെള്ള ശേഖരണം & കൃത്രിമ റീചാർജ്",
+  "inputs": "ഇൻപുട്ടുകൾ",
+  "user_name": "ഉപയോക്തൃ നാമം",
+  "location": "സ്ഥലം",
+  "dwellers": "വാസക്കാരുടെ എണ്ണം",
+  "rooftop_area": "മേൽക്കൂര വിസ്തീർണം (m²)",
+  "open_space_area": "തുറന്ന സ്ഥലം (m²)",
+  "submit": "മൂല്യനിർണ്ണയം",
+  "language.choose_language": "ഭാഷ തിരഞ്ഞെടുക്കുക",
+  "navbar.assessment": "മൂല്യനിർണ്ണയം",
+  "navbar.rainfall_prediction": "മഴ പ്രവചനം",
+  "navbar.visualization": "വിഷ്വലൈസേഷൻ",
+  "navbar.gamification": "ഗെയിമിഫിക്കേഷൻ",
+  "navbar.about_us": "ഞങ്ങളെക്കുറിച്ച്",
+  "navbar.login": "ലോഗിൻ",
+  "navbar.sign_up": "സൈൻ അപ്പ്",
+  "navbar.ai_assistant": "AI അസിസ്റ്റന്റ്",
+  "navbar.voice_assistant": "വോയ്സ് അസിസ്റ്റന്റ്",
+  "navbar.close": "അടയ്ക്കുക",
+  "navbar.start_voice_command": "വോയ്സ് കമാൻഡ് ആരംഭിക്കുക",
+  "navbar.stop_listening": "കേൾക്കുന്നത് നിർത്തുക",
+  "navbar.listening": "കേൾക്കുന്നു...",
+  "navbar.speak_command": "ഇപ്പോൾ നിങ്ങളുടെ കമാൻഡ് പറയുക",
+  "navbar.click_microphone": "വോയ്സ് കമാൻഡ് ആരംഭിക്കാൻ മൈക്രോഫോണിൽ ക്ലിക്ക് ചെയ്യുക"
+}
+
+

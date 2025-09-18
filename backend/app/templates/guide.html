@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>RTRWH Step-by-Step Guide</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #0f172a; }
+      h1, h2 { margin: 0 0 8px; }
+      .section { margin: 12px 0; }
+      .note { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; }
+      ol { padding-left: 18px; }
+      li { margin-bottom: 6px; }
+      .badge { display: inline-block; background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; padding: 2px 6px; border-radius: 9999px; font-size: 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>🛠️ Rooftop Rainwater Harvesting & Artificial Recharge</h1>
+    <div class="section">
+      <h2>📍 Site Summary <span class="badge">AI-generated</span></h2>
+      <div class="note">
+        <div><strong>Location:</strong> {{ assessment.location_desc }} ({{ assessment.latitude }}, {{ assessment.longitude }})</div>
+        <div><strong>Rooftop:</strong> {{ assessment.rooftop_area_m2 }} m², <strong>Open Space:</strong> {{ assessment.open_space_area_m2 }} m²</div>
+        <div><strong>Annual Rainfall:</strong> {{ assessment.results.runoff.annual_rainfall_mm }} mm, <strong>Runoff:</strong> {{ assessment.results.runoff.annual_runoff_volume_liters | round(0) }} L</div>
+        <div><strong>Recommended Structure:</strong> {{ assessment.results.structure.structure_type }} (Storage: {{ assessment.results.structure.storage_volume_liters | round(0) }} L)</div>
+      </div>
+    </div>
+
+    {% if feasible %}
+    <div class="section">
+      <h2>🧠 AI Step-by-Step Implementation Guide</h2>
+      <div class="note">{{ ai_steps }}</div>
+    </div>
+    {% else %}
+    <div class="section">
+      <h2>⚠️ Feasibility</h2>
+      <div class="note">Based on current inputs, rainwater harvesting appears not feasible at this time. Consider improving site conditions or consulting a specialist.</div>
+    </div>
+    {% endif %}
+  </body>
+</html>

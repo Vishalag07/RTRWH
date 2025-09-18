@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cgwb_blr_001",
+    "name": "Bengaluru Urban Observation Well",
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "depth_from": 0,
+    "depth_to": 60,
+    "water_table": 18.2,
+    "district": "Bengaluru Urban",
+    "state": "Karnataka",
+    "last_updated": "2025-09-10T09:00:00Z",
+    "data_source": "CGWB/WRIS"
+  },
+  {
+    "id": "cgwb_delhi_001",
+    "name": "New Delhi Observation Well",
+    "lat": 28.6139,
+    "lon": 77.2090,
+    "depth_from": 0,
+    "depth_to": 80,
+    "water_table": 35.7,
+    "district": "New Delhi",
+    "state": "Delhi",
+    "last_updated": "2025-09-10T09:00:00Z",
+    "data_source": "CGWB/WRIS"
+  }
+]

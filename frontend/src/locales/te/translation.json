@@ -1,0 +1,28 @@
+{
+  "app_title": "వర్షపు నీటి సంరక్షణ & కృతక రీచార్జ్",
+  "inputs": "ఇన్‌పుట్లు",
+  "user_name": "వినియోగదారు పేరు",
+  "location": "స్థానం",
+  "dwellers": "నివాసితుల సంఖ్య",
+  "rooftop_area": "అడ్డు పైకప్పు విస్తీర్ణం (m²)",
+  "open_space_area": "ఓపెన్ స్పేస్ (m²)",
+  "submit": "మూల్యాంకనం",
+  "language.choose_language": "భాషను ఎంచుకోండి",
+  "navbar.assessment": "మూల్యాంకనం",
+  "navbar.rainfall_prediction": "వర్షపాత అంచనా",
+  "navbar.visualization": "విజువలైజేషన్",
+  "navbar.gamification": "గేమిఫికేషన్",
+  "navbar.about_us": "మా గురించి",
+  "navbar.login": "లాగిన్",
+  "navbar.sign_up": "సైన్ అప్",
+  "navbar.ai_assistant": "AI సహాయకుడు",
+  "navbar.voice_assistant": "వాయిస్ సహాయకుడు",
+  "navbar.close": "మూసివేయి",
+  "navbar.start_voice_command": "వాయిస్ కమాండ్ ప్రారంభించండి",
+  "navbar.stop_listening": "వినడం ఆపండి",
+  "navbar.listening": "వింటున్నాను...",
+  "navbar.speak_command": "ఇప్పుడు మీ కమాండ్ చెప్పండి",
+  "navbar.click_microphone": "వాయిస్ కమాండ్ ప్రారంభించడానికి మైక్రోఫోన్‌పై క్లిక్ చేయండి"
+}
+
+

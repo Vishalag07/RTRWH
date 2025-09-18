@@ -1,0 +1,28 @@
+{
+  "app_title": "વરસાદી પાણી સંગ્રહ અને કૃત્રિમ રિચાર્જ",
+  "inputs": "ઇનપુટ્સ",
+  "user_name": "વપરાશકર્તા નામ",
+  "location": "સ્થાન",
+  "dwellers": "રહેવાસીઓની સંખ્યા",
+  "rooftop_area": "છત વિસ્તાર (m²)",
+  "open_space_area": "ખાલી જગ્યા (m²)",
+  "submit": "મૂલ્યાંકન",
+  "language.choose_language": "ભાષા પસંદ કરો",
+  "navbar.assessment": "મૂલ્યાંકન",
+  "navbar.rainfall_prediction": "વરસાદની આગાહી",
+  "navbar.visualization": "વિઝ્યુઅલાઇઝેશન",
+  "navbar.gamification": "ગેમિફિકેશન",
+  "navbar.about_us": "અમારા વિશે",
+  "navbar.login": "લોગિન",
+  "navbar.sign_up": "સાઇન અપ",
+  "navbar.ai_assistant": "AI સહાયક",
+  "navbar.voice_assistant": "વૉઇસ સહાયક",
+  "navbar.close": "બંધ કરો",
+  "navbar.start_voice_command": "વૉઇસ કમાન્ડ શરૂ કરો",
+  "navbar.stop_listening": "સાંભળવાનું બંધ કરો",
+  "navbar.listening": "સાંભળી રહ્યા છીએ...",
+  "navbar.speak_command": "હવે તમારો કમાન્ડ બોલો",
+  "navbar.click_microphone": "વૉઇસ કમાન્ડ શરૂ કરવા માટે માઇક્રોફોન પર ક્લિક કરો"
+}
+
+

@@ -1,0 +1,28 @@
+{
+  "app_title": "पावसाचे पाणी साठवण व कृत्रिम रिचार्ज",
+  "inputs": "इनपुट",
+  "user_name": "वापरकर्त्याचे नाव",
+  "location": "स्थान",
+  "dwellers": "राहिवाशांची संख्या",
+  "rooftop_area": "छताचे क्षेत्रफळ (m²)",
+  "open_space_area": "मोकळी जागा (m²)",
+  "submit": "मूल्यमापन",
+  "language.choose_language": "भाषा निवडा",
+  "navbar.assessment": "मूल्यमापन",
+  "navbar.rainfall_prediction": "पाऊस अंदाज",
+  "navbar.visualization": "व्हिज्युअलायझेशन",
+  "navbar.gamification": "गेमिफिकेशन",
+  "navbar.about_us": "आमच्याबद्दल",
+  "navbar.login": "लॉगिन",
+  "navbar.sign_up": "साइन अप",
+  "navbar.ai_assistant": "AI सहायक",
+  "navbar.voice_assistant": "व्हॉइस सहायक",
+  "navbar.close": "बंद करा",
+  "navbar.start_voice_command": "व्हॉइस कमांड सुरू करा",
+  "navbar.stop_listening": "ऐकणे थांबवा",
+  "navbar.listening": "ऐकत आहे...",
+  "navbar.speak_command": "आता तुमचा कमांड सांगा",
+  "navbar.click_microphone": "व्हॉइस कमांड सुरू करण्यासाठी मायक्रोफोनवर क्लिक करा"
+}
+
+
