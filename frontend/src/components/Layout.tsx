@@ -45,7 +45,7 @@ const Layout: React.FC = () => {
           <PageTransition transitionType="slide" duration={0.4}>
             <motion.main 
               key="content"
-              className="flex-1"
+              className="flex-1 pt-20"
             >
               <Outlet />
             </motion.main>

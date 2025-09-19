@@ -4,7 +4,8 @@ import { useTheme } from '../ThemeProvider';
 import { useNavigate } from 'react-router-dom';
 import { useLazyLoad } from '../../hooks/useLazyLoad';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { FiEye, FiEyeOff, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiMaximize2, FiMinimize2, FiRefreshCw } from 'react-icons/fi';
+import groundwaterApi, { GroundwaterData } from '../../services/groundwaterApi';
 
 interface GroundwaterVisualizationProps {
   className?: string;
@@ -14,20 +15,123 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [groundwaterData, setGroundwaterData] = useState<GroundwaterData | null>(null);
+  const [dataSource, setDataSource] = useState<string>('Loading...');
+  const [error, setError] = useState<string | null>(null);
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { elementRef, hasIntersected } = useLazyLoad({ threshold: 0.1 });
   const prefersReducedMotion = useReducedMotion();
 
-  // Mock groundwater data
-  const groundwaterData = {
-    currentLevel: 45, // meters below surface
-    averageLevel: 52,
-    trend: 'increasing',
-    quality: 'good',
-    lastUpdated: '2 hours ago'
+  // Get user's current location
+  const [userLocation, setUserLocation] = useState({ lat: 22.5, lon: 77.0 });
+
+  // Fetch real-time groundwater data
+  const fetchGroundwaterData = async (lat: number, lon: number) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await groundwaterApi.fetchGroundwaterData(lat, lon);
+      
+      if (response.success && response.data) {
+        setGroundwaterData(response.data);
+        setDataSource(`${response.source} (${(response.data.metadata.confidence * 100).toFixed(0)}% confidence)`);
+        console.log('Groundwater data loaded:', {
+          source: response.source,
+          confidence: response.data.metadata.confidence,
+          location: response.data.location.name,
+          level: response.data.groundwater.level_m
+        });
+      } else {
+        throw new Error(response.error || 'Failed to fetch groundwater data');
+      }
+    } catch (err) {
+      console.error('Error fetching groundwater data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      setDataSource('Demo Data (API Unavailable)');
+      
+      // Fallback to mock data
+      setGroundwaterData({
+        location: {
+          name: 'Demo Location',
+          lat,
+          lon,
+          country: 'India'
+        },
+        groundwater: {
+          level_m: 12.5,
+          depth_m: 15.8,
+          quality: 'Good',
+          last_updated: new Date().toISOString(),
+          source: 'Mock Data'
+        },
+        aquifer: {
+          type: 'Unconfined',
+          material: 'Alluvial',
+          thickness_m: 20.0,
+          permeability: 0.001,
+          porosity: 0.3,
+          recharge_rate: 0.5
+        },
+        soil: {
+          type: 'Clay Loam',
+          texture: 'Medium',
+          depth_m: 2.0,
+          permeability: 0.0001,
+          water_holding_capacity: 0.4,
+          color: '#A0522D'
+        },
+        metadata: {
+          data_source: 'Mock Data',
+          api_endpoint: 'local',
+          confidence: 0.5,
+          last_fetched: new Date().toISOString()
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Get user's current location
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn('Geolocation unavailable, using default location:', error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
+      );
+    }
+  }, []);
+
+  // Fetch data when location changes or component mounts
+  useEffect(() => {
+    if (hasIntersected) {
+      fetchGroundwaterData(userLocation.lat, userLocation.lon);
+    }
+  }, [userLocation.lat, userLocation.lon, hasIntersected]);
+
+  // Auto-refresh data every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (hasIntersected && !isLoading) {
+        fetchGroundwaterData(userLocation.lat, userLocation.lon);
+      }
+    }, 300000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [userLocation.lat, userLocation.lon, hasIntersected, isLoading]);
 
   useEffect(() => {
     if (!hasIntersected) return; // Only render when component is visible
@@ -45,15 +149,18 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
       
+      // Use light theme colors when in dark mode for better contrast
+      const useLightTheme = isDark;
+      
       // Draw ground surface
-      ctx.fillStyle = isDark ? '#374151' : '#8B7355';
+      ctx.fillStyle = useLightTheme ? '#8B7355' : '#8B7355';
       ctx.fillRect(0, 0, width, 20);
       
       // Draw soil layers
       const soilLayers = [
-        { color: isDark ? '#4B5563' : '#A78B5B', height: 30 },
-        { color: isDark ? '#6B7280' : '#C4A484', height: 25 },
-        { color: isDark ? '#9CA3AF' : '#D4C4A8', height: 20 }
+        { color: useLightTheme ? '#A78B5B' : '#A78B5B', height: 30 },
+        { color: useLightTheme ? '#C4A484' : '#C4A484', height: 25 },
+        { color: useLightTheme ? '#D4C4A8' : '#D4C4A8', height: 20 }
       ];
       
       let yOffset = 20;
@@ -63,13 +170,14 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
         yOffset += layer.height;
       });
       
-      // Draw water table
-      const waterTableY = 20 + (groundwaterData.currentLevel / 100) * (height - 20);
-      ctx.fillStyle = isDark ? '#1E40AF' : '#3B82F6';
+      // Draw water table using real data
+      const currentLevel = groundwaterData?.groundwater?.level_m || 12.5;
+      const waterTableY = 20 + (currentLevel / 100) * (height - 20);
+      ctx.fillStyle = useLightTheme ? '#3B82F6' : '#3B82F6';
       ctx.fillRect(0, waterTableY, width, height - waterTableY);
       
       // Draw water level indicator
-      ctx.strokeStyle = isDark ? '#60A5FA' : '#1D4ED8';
+      ctx.strokeStyle = useLightTheme ? '#1D4ED8' : '#1D4ED8';
       ctx.lineWidth = 3;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -80,7 +188,7 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
       
       // Draw borewell shaft
       const shaftX = width / 2;
-      ctx.strokeStyle = isDark ? '#6B7280' : '#9CA3AF';
+      ctx.strokeStyle = useLightTheme ? '#9CA3AF' : '#9CA3AF';
       ctx.lineWidth = 8;
       ctx.beginPath();
       ctx.moveTo(shaftX, 20);
@@ -88,14 +196,14 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
       ctx.stroke();
       
       // Draw water level text
-      ctx.fillStyle = isDark ? '#E5E7EB' : '#1F2937';
+      ctx.fillStyle = useLightTheme ? '#1F2937' : '#1F2937';
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`${groundwaterData.currentLevel}m`, width - 10, waterTableY - 5);
+      ctx.fillText(`${currentLevel.toFixed(1)}m`, width - 10, waterTableY - 5);
     };
 
     drawVisualization();
-  }, [isDark, groundwaterData.currentLevel, hasIntersected]);
+  }, [isDark, groundwaterData?.groundwater?.level_m, hasIntersected]);
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
@@ -155,6 +263,23 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
           </div>
           <div className="flex items-center gap-2">
             <motion.button
+              onClick={() => {
+                setIsRefreshing(true);
+                fetchGroundwaterData(userLocation.lat, userLocation.lon);
+                setTimeout(() => setIsRefreshing(false), 1000);
+              }}
+              disabled={isRefreshing}
+              className={`p-2 rounded-lg transition-all duration-200 ${
+                isDark 
+                  ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300' 
+                  : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-600'
+              } ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              whileHover={{ scale: isRefreshing ? 1 : 1.05 }}
+              whileTap={{ scale: isRefreshing ? 1 : 0.95 }}
+            >
+              <FiRefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </motion.button>
+            <motion.button
               onClick={() => setIsAnimating(!isAnimating)}
               className={`p-2 rounded-lg transition-all duration-200 ${
                 isDark 
@@ -188,13 +313,21 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
             : 'bg-slate-100/50 border border-slate-200/50'
         }`}>
           {hasIntersected ? (
-            <canvas
-              ref={canvasRef}
-              width={400}
-              height={isExpanded ? 300 : 200}
-              className="w-full h-auto"
-              aria-label="Groundwater visualization showing water table depth and borewell shaft"
-            />
+            <>
+              {/* Light theme image overlay for dark theme */}
+              {isDark && (
+                <div className="absolute inset-0 z-10 opacity-20">
+                  <div className="w-full h-full bg-gradient-to-br from-blue-100 via-cyan-50 to-green-100 rounded-xl" />
+                </div>
+              )}
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={isExpanded ? 300 : 200}
+                className="w-full h-auto relative z-20"
+                aria-label="Groundwater visualization showing water table depth and borewell shaft"
+              />
+            </>
           ) : (
             <div className="w-full h-48 flex items-center justify-center">
               <div className="text-center">
@@ -217,9 +350,30 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
                 ? 'bg-slate-800/80 text-slate-200' 
                 : 'bg-white/80 text-slate-800'
             }`}>
-              Water Level: {groundwaterData.currentLevel}m
+              Water Level: {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m
             </div>
           </div>
+          
+          {/* Data Source Info */}
+          <div className="absolute bottom-4 left-4">
+            <div className={`px-2 py-1 rounded text-xs font-medium ${
+              isDark 
+                ? 'bg-slate-800/80 text-slate-300' 
+                : 'bg-white/80 text-slate-600'
+            }`}>
+              {dataSource}
+            </div>
+          </div>
+          
+          {/* Loading Indicator */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <div className="flex items-center gap-2 bg-white/90 px-3 py-2 rounded-lg">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm text-slate-700">Loading real-time data...</span>
+              </div>
+            </div>
+          )}
           
           {/* Animation Indicator */}
           {isAnimating && (
@@ -251,29 +405,31 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
               <div className={`text-xl font-bold ${
                 isDark ? 'text-cyan-400' : 'text-cyan-600'
               }`}>
-                {groundwaterData.currentLevel}m
+                {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m
               </div>
             </div>
             <div>
               <div className={`text-sm ${
                 isDark ? 'text-slate-400' : 'text-slate-600'
               }`}>
-                Average Level
+                Depth to Water
               </div>
               <div className={`text-xl font-bold ${
                 isDark ? 'text-slate-200' : 'text-slate-800'
               }`}>
-                {groundwaterData.averageLevel}m
+                {groundwaterData?.groundwater?.depth_m?.toFixed(1) || '15.8'}m
               </div>
             </div>
             <div>
               <div className={`text-sm ${
                 isDark ? 'text-slate-400' : 'text-slate-600'
               }`}>
-                Trend
+                Location
               </div>
-              <div className={`text-lg font-semibold ${getTrendColor(groundwaterData.trend)}`}>
-                {groundwaterData.trend} ↗️
+              <div className={`text-lg font-semibold ${
+                isDark ? 'text-blue-400' : 'text-blue-600'
+              }`}>
+                {groundwaterData?.location?.name || 'Demo Location'}
               </div>
             </div>
             <div>
@@ -282,11 +438,43 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
               }`}>
                 Quality
               </div>
-              <div className={`text-lg font-semibold ${getQualityColor(groundwaterData.quality)}`}>
-                {groundwaterData.quality}
+              <div className={`text-lg font-semibold ${getQualityColor(groundwaterData?.groundwater?.quality || 'Good')}`}>
+                {groundwaterData?.groundwater?.quality || 'Good'}
               </div>
             </div>
           </div>
+          
+          {/* Additional Info */}
+          {groundwaterData && (
+            <div className="mt-4 pt-4 border-t border-slate-300/20">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Aquifer Type:</span>
+                  <span className={`ml-2 font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {groundwaterData.aquifer?.type || 'Unconfined'}
+                  </span>
+                </div>
+                <div>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Soil Type:</span>
+                  <span className={`ml-2 font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {groundwaterData.soil?.type || 'Clay Loam'}
+                  </span>
+                </div>
+                <div>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Last Updated:</span>
+                  <span className={`ml-2 font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {new Date(groundwaterData.groundwater?.last_updated || new Date()).toLocaleString()}
+                  </span>
+                </div>
+                <div>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Confidence:</span>
+                  <span className={`ml-2 font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {((groundwaterData.metadata?.confidence || 0.5) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Expanded View */}

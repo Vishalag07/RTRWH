@@ -21,6 +21,7 @@ const Chat = lazy(() => import('./pages/Chat'));
 const GroundwaterDepthAnalyzer = lazy(() => import('./pages/GroundwaterDepthAnalyzer'));
 const VisualAquiferDepthDisplay = lazy(() => import('./pages/VisualAquiferDepthDisplay'));
 const Gamification = lazy(() => import('./pages/Gamification'));
+const GroundwaterApiDemo = lazy(() => import('./components/GroundwaterApiDemo'));
  
 
 const router = createBrowserRouter(
@@ -54,6 +55,7 @@ const router = createBrowserRouter(
         { path: '/heatmapanalysis', element: <Suspense fallback={<div>Loading...</div>}><GroundwaterDepthAnalyzer /></Suspense> },
         { path: '/aquifer-visualization', element: <Suspense fallback={<div>Loading...</div>}><VisualAquiferDepthDisplay /></Suspense> },
         { path: '/gamification', element: <Suspense fallback={<div>Loading...</div>}><Gamification /></Suspense> },
+        { path: '/api-demo', element: <Suspense fallback={<div>Loading...</div>}><GroundwaterApiDemo /></Suspense> },
         // Additional routes for footer links
         { path: '/contact', element: <Suspense fallback={<div>Loading...</div>}><div className="p-8 text-center"><h1 className="text-2xl font-bold">Contact Us</h1><p className="mt-4">Contact page coming soon...</p></div></Suspense> },
         { path: '/privacy', element: <Suspense fallback={<div>Loading...</div>}><div className="p-8 text-center"><h1 className="text-2xl font-bold">Privacy Policy</h1><p className="mt-4">Privacy policy coming soon...</p></div></Suspense> },

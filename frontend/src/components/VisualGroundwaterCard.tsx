@@ -65,7 +65,7 @@ const VisualGroundwaterCard: React.FC = () => {
   };
 
   return (
-    <Link to="/visual-groundwater" className="block">
+    <Link to="/aquifer-visualization" className="block">
       <motion.div
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 border border-blue-200 p-6 shadow-lg cursor-pointer h-full"
         whileHover={{ 

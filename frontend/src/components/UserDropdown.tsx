@@ -65,7 +65,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
         } backdrop-blur-sm border shadow-soft hover:shadow-medium`}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        aria-label={`User menu for ${user.name}`}
+        aria-label={`User menu for ${user.name || 'User'}`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >
@@ -78,12 +78,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold">
-              {user.name.charAt(0).toUpperCase()}
+              {user.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
           )}
           <div className="hidden sm:block text-left">
-            <div className="text-sm font-medium">{user.name}</div>
-            <div className="text-xs opacity-70">{user.email}</div>
+            <div className="text-sm font-medium">{user.name || 'User'}</div>
+            <div className="text-xs opacity-70">{user.email || 'user@example.com'}</div>
           </div>
         </div>
         <motion.div
@@ -133,12 +133,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-lg font-semibold">
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                   <div>
-                    <div className="font-semibold text-sm">{user.name}</div>
-                    <div className="text-xs opacity-70">{user.email}</div>
+                    <div className="font-semibold text-sm">{user.name || 'User'}</div>
+                    <div className="text-xs opacity-70">{user.email || 'user@example.com'}</div>
                   </div>
                 </div>
               </div>

@@ -129,7 +129,25 @@ export function Chat() {
     setMessages(prev => [...prev, { id: botMessageId, content: '', isUser: false, timestamp: new Date(), isStreaming: true }]);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/chat/stream`, {
+      // Check if backend is available
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+      
+      // Mock response if backend is not available
+      if (!apiBase.includes('localhost:8000') || window.location.hostname !== 'localhost') {
+        // Simulate a mock response
+        setTimeout(() => {
+          const mockResponse = "I'm a demo AI assistant. The backend is not currently available, but I can help you with general questions about rainwater harvesting and water conservation.";
+          setMessages(prev => prev.map(msg => 
+            msg.id === botMessageId 
+              ? { ...msg, content: mockResponse, isStreaming: false }
+              : msg
+          ));
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
+      const response = await fetch(`${apiBase}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage.content }),

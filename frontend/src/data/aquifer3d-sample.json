@@ -1,0 +1,197 @@
+{
+  "small_shaft": {
+    "soil_layers": [
+      {
+        "name": "Topsoil",
+        "thickness_m": 2,
+        "permeability": 0.8,
+        "porosity": 0.4,
+        "color": "#8B4513"
+      },
+      {
+        "name": "Sand",
+        "thickness_m": 8,
+        "permeability": 0.9,
+        "porosity": 0.35,
+        "color": "#F4A460"
+      },
+      {
+        "name": "Clay",
+        "thickness_m": 5,
+        "permeability": 0.1,
+        "porosity": 0.5,
+        "color": "#CD853F"
+      },
+      {
+        "name": "Gravel",
+        "thickness_m": 10,
+        "permeability": 0.95,
+        "porosity": 0.25,
+        "color": "#A9A9A9"
+      },
+      {
+        "name": "Bedrock",
+        "thickness_m": 15,
+        "permeability": 0.05,
+        "porosity": 0.1,
+        "color": "#696969"
+      }
+    ],
+    "groundwater_depth_m": 12,
+    "borewell": {
+      "depth_m": 25,
+      "diameter_m": 0.3,
+      "position": [0, 0, 0]
+    },
+    "shaft": {
+      "depth_m": 8,
+      "diameter_m": 0.2,
+      "size_category": "small"
+    },
+    "rooftop": {
+      "width_m": 8,
+      "length_m": 6,
+      "height_m": 3,
+      "position": [-4, 0, 1.5],
+      "pipe_diameter_m": 0.15,
+      "pipe_length_m": 6
+    },
+    "overflow_threshold": 8,
+    "water_flow": {
+      "isActive": true,
+      "flowRate": 1.0,
+      "direction": "down",
+      "color": "#4A90E2"
+    }
+  },
+  "medium_shaft": {
+    "soil_layers": [
+      {
+        "name": "Topsoil",
+        "thickness_m": 1.5,
+        "permeability": 0.7,
+        "porosity": 0.45,
+        "color": "#8B4513"
+      },
+      {
+        "name": "Sand",
+        "thickness_m": 12,
+        "permeability": 0.85,
+        "porosity": 0.3,
+        "color": "#F4A460"
+      },
+      {
+        "name": "Clay",
+        "thickness_m": 8,
+        "permeability": 0.15,
+        "porosity": 0.55,
+        "color": "#CD853F"
+      },
+      {
+        "name": "Gravel",
+        "thickness_m": 15,
+        "permeability": 0.9,
+        "porosity": 0.2,
+        "color": "#A9A9A9"
+      },
+      {
+        "name": "Bedrock",
+        "thickness_m": 20,
+        "permeability": 0.08,
+        "porosity": 0.12,
+        "color": "#696969"
+      }
+    ],
+    "groundwater_depth_m": 15,
+    "borewell": {
+      "depth_m": 30,
+      "diameter_m": 0.4,
+      "position": [0, 0, 0]
+    },
+    "shaft": {
+      "depth_m": 12,
+      "diameter_m": 0.3,
+      "size_category": "medium"
+    },
+    "rooftop": {
+      "width_m": 10,
+      "length_m": 8,
+      "height_m": 3.5,
+      "position": [-5, 0, 1.75],
+      "pipe_diameter_m": 0.2,
+      "pipe_length_m": 7
+    },
+    "overflow_threshold": 12,
+    "water_flow": {
+      "isActive": true,
+      "flowRate": 1.2,
+      "direction": "down",
+      "color": "#4A90E2"
+    }
+  },
+  "large_shaft": {
+    "soil_layers": [
+      {
+        "name": "Topsoil",
+        "thickness_m": 3,
+        "permeability": 0.6,
+        "porosity": 0.5,
+        "color": "#8B4513"
+      },
+      {
+        "name": "Sand",
+        "thickness_m": 15,
+        "permeability": 0.8,
+        "porosity": 0.28,
+        "color": "#F4A460"
+      },
+      {
+        "name": "Clay",
+        "thickness_m": 10,
+        "permeability": 0.2,
+        "porosity": 0.6,
+        "color": "#CD853F"
+      },
+      {
+        "name": "Gravel",
+        "thickness_m": 20,
+        "permeability": 0.85,
+        "porosity": 0.18,
+        "color": "#A9A9A9"
+      },
+      {
+        "name": "Bedrock",
+        "thickness_m": 25,
+        "permeability": 0.1,
+        "porosity": 0.15,
+        "color": "#696969"
+      }
+    ],
+    "groundwater_depth_m": 18,
+    "borewell": {
+      "depth_m": 35,
+      "diameter_m": 0.5,
+      "position": [0, 0, 0]
+    },
+    "shaft": {
+      "depth_m": 15,
+      "diameter_m": 0.4,
+      "size_category": "large"
+    },
+    "rooftop": {
+      "width_m": 12,
+      "length_m": 10,
+      "height_m": 4,
+      "position": [-6, 0, 2],
+      "pipe_diameter_m": 0.25,
+      "pipe_length_m": 8
+    },
+    "overflow_threshold": 15,
+    "water_flow": {
+      "isActive": true,
+      "flowRate": 1.5,
+      "direction": "down",
+      "color": "#4A90E2"
+    }
+  }
+}
