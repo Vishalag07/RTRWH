@@ -107,8 +107,11 @@ export function useVoiceAssistant(
 
       try {
         synthRef.current.speak(utterance);
-      } catch (_) {
-        // Ignore AbortError caused by immediate cancel/interrupt
+      } catch (error) {
+        // Ignore AbortError and other audio interruption errors
+        if (error instanceof Error && !error.name.includes('AbortError')) {
+          console.warn('Speech synthesis error:', error);
+        }
       }
     };
 
@@ -117,8 +120,11 @@ export function useVoiceAssistant(
       pendingUtteranceRef.current = text;
       try {
         synthRef.current.cancel();
-      } catch (_) {
-        // Ignore AbortError
+      } catch (error) {
+        // Ignore AbortError and other audio interruption errors
+        if (error instanceof Error && !error.name.includes('AbortError')) {
+          console.warn('Speech synthesis cancel error:', error);
+        }
       }
       return;
     }

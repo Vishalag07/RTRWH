@@ -28,7 +28,12 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
-    "three": "^0.153.0"
+    "three": "^0.153.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.451.0",
+    "react-hot-toast": "^2.4.1",
+    "react-query": "^3.39.3",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",

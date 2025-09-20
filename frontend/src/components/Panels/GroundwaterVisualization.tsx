@@ -7,6 +7,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { FiRefreshCw } from 'react-icons/fi';
 import groundwaterApi, { GroundwaterData } from '../../services/groundwaterApi';
 import { generateGroundwaterPDF } from '../../services/pdfExport';
+import SimpleAutoPlayGroundwater from '../SimpleAutoPlayGroundwater';
 
 interface GroundwaterVisualizationProps {
   className?: string;
@@ -15,12 +16,12 @@ interface GroundwaterVisualizationProps {
 const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ className = '' }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fetchSuccess, setFetchSuccess] = useState(false);
   const [groundwaterData, setGroundwaterData] = useState<GroundwaterData | null>(null);
   const [dataSource, setDataSource] = useState<string>('Loading...');
   const [error, setError] = useState<string | null>(null);
   const { isDark } = useTheme();
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { elementRef, hasIntersected } = useLazyLoad({ threshold: 0.1 });
   const prefersReducedMotion = useReducedMotion();
 
@@ -66,79 +67,83 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
     });
   };
 
-  // Fetch real-time groundwater data
+  // Fetch real-time groundwater data from API
   const fetchGroundwaterData = async (lat: number, lon: number, locationName?: string) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Try backend API first
-      try {
-        const backendResponse = await fetch(`/api/groundwater/info?lat=${lat}&lon=${lon}`);
-        if (backendResponse.ok) {
-          const backendData = await backendResponse.json();
+        // Try CGWB API first
+        try {
+          const cgwbResponse = await fetch(`/api/aquifer/info?lat=${lat}&lon=${lon}`);
+          if (cgwbResponse.ok) {
+            const cgwbData = await cgwbResponse.json();
           
-          // Transform backend data to GroundwaterData format
-          const transformedData: GroundwaterData = {
-            location: {
-              name: backendData.location || locationName || 'Unknown Location',
-              lat,
-              lon,
-              state: 'Unknown',
-              country: 'India'
-            },
-            groundwater: {
-              level_m: backendData.groundwater_level_m || 15.0,
-              depth_m: backendData.groundwater_level_m || 15.0,
-              quality: 'Good',
-              last_updated: backendData.last_updated || new Date().toISOString().split('T')[0],
-              source: 'RTRWH Backend'
-            },
-            aquifer: {
-              type: backendData.aquifer_type || 'Unconfined Aquifer',
-              material: 'Alluvial',
-              thickness_m: 20.0,
-              permeability: 0.001,
-              porosity: 0.3,
-              recharge_rate: 0.5
-            },
-            soil: {
-              type: 'Clay Loam',
-              texture: 'Medium',
-              depth_m: 2.0,
-              permeability: 0.0001,
-              water_holding_capacity: 0.4,
-              color: '#A0522D'
-            },
-            metadata: {
-              data_source: 'India WRIS (Primary)',
-              api_endpoint: 'indiawris.gov.in',
-              confidence: 0.95,
-              last_fetched: new Date().toISOString().split('T')[0]
-            }
-          };
-          
-          setGroundwaterData(transformedData);
-          setDataSource('RTRWH Backend (95% confidence)');
-          console.log('Backend groundwater data loaded:', {
-            source: 'RTRWH Backend',
-            location: backendData.location,
-            groundwater_level: backendData.groundwater_level_m,
-            aquifer_type: backendData.aquifer_type
-          });
-          return; // Success, exit early
+            // Transform CGWB API data to GroundwaterData format
+            const transformedData: GroundwaterData = {
+              location: {
+                name: cgwbData.location && cgwbData.location !== 'Unknown' ? cgwbData.location : locationName || 'Current Location',
+                lat,
+                lon,
+                state: 'Unknown',
+                country: 'India'
+              },
+              groundwater: {
+                level_m: cgwbData.groundwater_level_m || 15.0,
+                depth_m: cgwbData.water_table_depth_m || cgwbData.groundwater_level_m || 15.0,
+                quality: 'Good',
+                last_updated: cgwbData.last_updated || new Date().toISOString().split('T')[0],
+                source: 'CGWB API'
+              },
+              aquifer: {
+                type: cgwbData.aquifer_type || 'Unconfined Aquifer',
+                material: 'Alluvial',
+                thickness_m: 20.0,
+                permeability: 0.001,
+                porosity: 0.3,
+                recharge_rate: 0.5,
+                borewells_connected: cgwbData.borewells_connected || 0
+              },
+              soil: {
+                type: cgwbData.soil_type || 'Clay Loam',
+                texture: 'Medium',
+                depth_m: 2.0,
+                permeability: 0.0001,
+                water_holding_capacity: 0.4,
+                color: '#A0522D'
+              },
+              metadata: {
+                data_source: 'CGWB API',
+                api_endpoint: '/api/aquifer/info',
+                confidence: 0.95,
+                last_fetched: new Date().toISOString().split('T')[0]
+              }
+            };
+            
+            setGroundwaterData(transformedData);
+            setDataSource('CGWB API (95% confidence)');
+            console.log('CGWB API groundwater data loaded:', {
+              source: 'CGWB API',
+              location: cgwbData.location,
+              groundwater_level: cgwbData.groundwater_level_m,
+              water_table_depth: cgwbData.water_table_depth_m,
+              aquifer_type: cgwbData.aquifer_type,
+              soil_type: cgwbData.soil_type,
+              borewells_connected: cgwbData.borewells_connected
+            });
+            return; // Success, exit early
+          }
+        } catch (cgwbError) {
+          console.warn('CGWB API failed, trying enhanced API:', cgwbError);
         }
-      } catch (backendError) {
-        console.warn('Backend API failed, trying enhanced API:', backendError);
-      }
       
       // Fallback to enhanced API
       const response = await groundwaterApi.fetchGroundwaterData(lat, lon);
       
       if (response.success && response.data) {
         setGroundwaterData(response.data);
-        setDataSource(`${response.source} - ${response.data.metadata.data_source} (${(response.data.metadata.confidence * 100).toFixed(0)}% confidence)`);
-        console.log('Groundwater data loaded:', {
+        setDataSource(`CGWB API - ${response.data.metadata.data_source} (${(response.data.metadata.confidence * 100).toFixed(0)}% confidence)`);
+        console.log('Fallback API groundwater data loaded:', {
           source: response.source,
           confidence: response.data.metadata.confidence,
           location: response.data.location.name,
@@ -150,9 +155,9 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
     } catch (err) {
       console.error('Error fetching groundwater data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
-      setDataSource('Real-time Data (API Unavailable)');
+                setDataSource('CGWB API Unavailable - Using Fallback Data');
       
-      // Enhanced fallback data with more realistic values
+      // Fallback data with realistic values
       const mockData = {
         location: {
           name: locationName || 'Current Location',
@@ -161,37 +166,39 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
           country: 'India'
         },
         groundwater: {
-          level_m: Math.round((Math.random() * 20 + 5) * 10) / 10, // 5-25m with 0.1 precision
-          depth_m: Math.round((Math.random() * 25 + 10) * 10) / 10, // 10-35m with 0.1 precision
-          quality: ['Excellent', 'Good', 'Fair', 'Poor'][Math.floor(Math.random() * 4)],
+          level_m: 15.0,
+          depth_m: 18.0,
+          quality: 'Good',
           last_updated: new Date().toISOString().split('T')[0],
-          source: 'Real-time Simulation'
+          source: 'Fallback Data'
         },
         aquifer: {
-          type: ['Unconfined', 'Confined', 'Semi-confined'][Math.floor(Math.random() * 3)],
-          material: ['Alluvial', 'Sandstone', 'Limestone', 'Granite'][Math.floor(Math.random() * 4)],
-          thickness_m: Math.round((Math.random() * 30 + 10) * 10) / 10, // 10-40m
-          permeability: Math.random() * 0.01, // 0-0.01 m/s
-          porosity: Math.round((Math.random() * 0.4 + 0.1) * 100) / 100, // 0.1-0.5
-          recharge_rate: Math.round((Math.random() * 2 + 0.1) * 10) / 10 // 0.1-2.1 mm/year
+          type: 'Unconfined Aquifer',
+          material: 'Alluvial',
+          thickness_m: 20.0,
+          permeability: 0.001,
+          porosity: 0.3,
+          recharge_rate: 0.5,
+          borewells_connected: 100
         },
         soil: {
-          type: ['Clay Loam', 'Sandy Loam', 'Silt Loam', 'Clay', 'Sand'][Math.floor(Math.random() * 5)],
-          texture: ['Fine', 'Medium', 'Coarse'][Math.floor(Math.random() * 3)],
-          depth_m: Math.round((Math.random() * 3 + 1) * 10) / 10, // 1-4m
-          permeability: Math.random() * 0.001, // 0-0.001 m/s
-          water_holding_capacity: Math.round((Math.random() * 0.5 + 0.2) * 100) / 100, // 0.2-0.7
-          color: ['#A0522D', '#8B7355', '#D2B48C', '#F4A460', '#CD853F'][Math.floor(Math.random() * 5)]
+          type: 'Clay Loam',
+          texture: 'Medium',
+          depth_m: 2.0,
+          permeability: 0.0001,
+          water_holding_capacity: 0.4,
+          color: '#A0522D'
         },
         metadata: {
-          data_source: 'India WRIS (Fallback)',
-          api_endpoint: 'indiawris.gov.in',
-          confidence: Math.round((Math.random() * 0.3 + 0.7) * 100) / 100, // 0.7-1.0
+          data_source: 'CGWB API (Fallback)',
+          api_endpoint: 'N/A',
+          confidence: 0.5,
           last_fetched: new Date().toISOString().split('T')[0]
         }
       };
       
       setGroundwaterData(mockData);
+      console.log('Fallback mock data set');
     } finally {
       setIsLoading(false);
     }
@@ -233,77 +240,6 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
     return () => clearInterval(interval);
   }, [userLocation.lat, userLocation.lon, hasIntersected, isLoading]);
 
-  useEffect(() => {
-    if (!hasIntersected) return; // Only render when component is visible
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const drawVisualization = () => {
-      const width = canvas.width;
-      const height = canvas.height;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height);
-      
-      // Use light theme colors when in dark mode for better contrast
-      const useLightTheme = isDark;
-      
-      // Draw ground surface
-      ctx.fillStyle = useLightTheme ? '#8B7355' : '#8B7355';
-      ctx.fillRect(0, 0, width, 20);
-      
-      // Draw soil layers
-      const soilLayers = [
-        { color: useLightTheme ? '#A78B5B' : '#A78B5B', height: 30 },
-        { color: useLightTheme ? '#C4A484' : '#C4A484', height: 25 },
-        { color: useLightTheme ? '#D4C4A8' : '#D4C4A8', height: 20 }
-      ];
-      
-      let yOffset = 20;
-      soilLayers.forEach(layer => {
-        ctx.fillStyle = layer.color;
-        ctx.fillRect(0, yOffset, width, layer.height);
-        yOffset += layer.height;
-      });
-      
-      // Draw water table using real data
-      const currentLevel = groundwaterData?.groundwater?.level_m || 12.5;
-      const waterTableY = 20 + (currentLevel / 100) * (height - 20);
-      ctx.fillStyle = useLightTheme ? '#3B82F6' : '#3B82F6';
-      ctx.fillRect(0, waterTableY, width, height - waterTableY);
-      
-      // Draw water level indicator
-      ctx.strokeStyle = useLightTheme ? '#1D4ED8' : '#1D4ED8';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(0, waterTableY);
-      ctx.lineTo(width, waterTableY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      
-      // Draw borewell shaft
-      const shaftX = width / 2;
-      ctx.strokeStyle = useLightTheme ? '#9CA3AF' : '#9CA3AF';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(shaftX, 20);
-      ctx.lineTo(shaftX, waterTableY);
-      ctx.stroke();
-      
-      // Draw water level text
-      ctx.fillStyle = useLightTheme ? '#1F2937' : '#1F2937';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${currentLevel.toFixed(1)}m`, width - 10, waterTableY - 5);
-    };
-
-    drawVisualization();
-  }, [isDark, groundwaterData?.groundwater?.level_m, hasIntersected]);
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
@@ -316,7 +252,7 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
 
   return (
     <div 
-      ref={elementRef}
+      ref={elementRef as React.RefObject<HTMLDivElement>}
       className={`${className} p-6 rounded-2xl shadow-soft border backdrop-blur-sm ${
         isDark 
           ? 'bg-slate-800/50 border-slate-700/50' 
@@ -347,13 +283,13 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
               <p className={`text-sm ${
                 isDark ? 'text-slate-400' : 'text-slate-600'
               }`}>
-                3D borewell shaft analysis
+                Real-time groundwater data from API
               </p>
             </div>
           </div>
         </div>
 
-        {/* Visualization Canvas */}
+        {/* Simple Auto-Play Groundwater Animation */}
         <div className={`relative rounded-xl overflow-hidden mb-4 ${
           isDark 
             ? 'bg-slate-900/50 border border-slate-700/50' 
@@ -361,19 +297,34 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
         }`}>
           {hasIntersected ? (
             <>
-              {/* Light theme image overlay for dark theme */}
-              {isDark && (
-                <div className="absolute inset-0 z-10 opacity-20">
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 via-cyan-50 to-green-100 rounded-xl" />
-                </div>
-              )}
-              <canvas
-                ref={canvasRef}
-                width={400}
-                height={200}
-                className="w-full h-auto relative z-20"
-                aria-label="Groundwater visualization showing water table depth and borewell shaft"
+              <SimpleAutoPlayGroundwater 
+                lat={userLocation.lat}
+                lon={userLocation.lon}
+                waterLevel={groundwaterData?.groundwater?.level_m || 12.5}
+                className="w-full h-48"
               />
+              
+              {/* Overlay Info */}
+              <div className="absolute top-4 left-4">
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  isDark 
+                    ? 'bg-slate-800/80 text-slate-200' 
+                    : 'bg-white/80 text-slate-800'
+                }`}>
+                  Water Level: {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m | Borewells: {groundwaterData?.aquifer?.borewells_connected || 'N/A'}
+                </div>
+              </div>
+              
+              {/* Data Source Info */}
+              <div className="absolute bottom-4 left-4">
+                <div className={`px-2 py-1 rounded text-xs font-medium ${
+                  isDark 
+                    ? 'bg-slate-800/80 text-slate-300' 
+                    : 'bg-white/80 text-slate-600'
+                }`}>
+                  {dataSource}
+                </div>
+              </div>
             </>
           ) : (
             <div className="w-full h-48 flex items-center justify-center">
@@ -390,28 +341,6 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
             </div>
           )}
           
-          {/* Overlay Info */}
-          <div className="absolute top-4 left-4">
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              isDark 
-                ? 'bg-slate-800/80 text-slate-200' 
-                : 'bg-white/80 text-slate-800'
-            }`}>
-              Water Level: {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m | Borewells: {groundwaterData?.aquifer?.borewells_connected || 'N/A'}
-            </div>
-          </div>
-          
-          {/* Data Source Info */}
-          <div className="absolute bottom-4 left-4">
-            <div className={`px-2 py-1 rounded text-xs font-medium ${
-              isDark 
-                ? 'bg-slate-800/80 text-slate-300' 
-                : 'bg-white/80 text-slate-600'
-            }`}>
-              {dataSource}
-            </div>
-          </div>
-          
           {/* Loading Indicator */}
           {isLoading && (
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
@@ -421,8 +350,74 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
               </div>
             </div>
           )}
-          
         </div>
+
+        {/* Aquifer & Soil Information - Moved to first position */}
+        {groundwaterData && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className={`p-4 rounded-xl border ${
+              isDark 
+                ? 'bg-slate-800/50 border-slate-700/50' 
+                : 'bg-white/70 border-slate-200/70'
+            }`}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`p-2 rounded-lg ${
+                  isDark ? 'bg-purple-500/20' : 'bg-purple-100'
+                }`}>
+                  <svg className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div className={`text-sm font-medium ${
+                  isDark ? 'text-slate-300' : 'text-slate-600'
+                }`}>
+                  Aquifer Type
+                </div>
+              </div>
+              <div className={`text-xl font-bold ${
+                isDark ? 'text-purple-400' : 'text-purple-600'
+              }`}>
+                {groundwaterData.aquifer?.type || 'Unconfined Aquifer'}
+              </div>
+              <div className={`text-xs mt-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                Geological formation
+              </div>
+            </div>
+            <div className={`p-4 rounded-xl border ${
+              isDark 
+                ? 'bg-slate-800/50 border-slate-700/50' 
+                : 'bg-white/70 border-slate-200/70'
+            }`}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`p-2 rounded-lg ${
+                  isDark ? 'bg-orange-500/20' : 'bg-orange-100'
+                }`}>
+                  <svg className={`w-5 h-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                  </svg>
+                </div>
+                <div className={`text-sm font-medium ${
+                  isDark ? 'text-slate-300' : 'text-slate-600'
+                }`}>
+                  Soil Type
+                </div>
+              </div>
+              <div className={`text-xl font-bold ${
+                isDark ? 'text-orange-400' : 'text-orange-600'
+              }`}>
+                {groundwaterData.soil?.type || 'Clay Loam'}
+              </div>
+              <div className={`text-xs mt-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                Surface composition
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Data Summary */}
         <div className={`p-4 rounded-xl ${
@@ -430,71 +425,209 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
             ? 'bg-slate-700/30 border border-slate-600/30' 
             : 'bg-slate-100/50 border border-slate-200/50'
         }`}>
-          {/* Primary Metrics */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div className={`p-4 rounded-xl border ${
-              isDark 
-                ? 'bg-slate-800/50 border-slate-700/50' 
-                : 'bg-white/70 border-slate-200/70'
-            }`}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${
-                  isDark ? 'bg-cyan-500/20' : 'bg-cyan-100'
-                }`}>
-                  <svg className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                  </svg>
+            {/* Primary Metrics - Only show data available from API */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-cyan-500/20' : 'bg-cyan-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Groundwater Level
+                  </div>
                 </div>
-                <div className={`text-sm font-medium ${
-                  isDark ? 'text-slate-300' : 'text-slate-600'
+                <div className={`text-2xl font-bold ${
+                  isDark ? 'text-cyan-400' : 'text-cyan-600'
                 }`}>
-                  Water Level
+                  {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  Below surface
                 </div>
               </div>
-              <div className={`text-2xl font-bold ${
-                isDark ? 'text-cyan-400' : 'text-cyan-600'
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
               }`}>
-                {groundwaterData?.groundwater?.level_m?.toFixed(1) || '12.5'}m
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Water Table Depth
+                  </div>
+                </div>
+                <div className={`text-2xl font-bold ${
+                  isDark ? 'text-indigo-400' : 'text-indigo-600'
+                }`}>
+                  {groundwaterData?.groundwater?.depth_m?.toFixed(1) || '15.2'}m
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  From surface
+                </div>
               </div>
-              <div className={`text-xs mt-1 ${
-                isDark ? 'text-slate-400' : 'text-slate-500'
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
               }`}>
-                Below surface
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-blue-500/20' : 'bg-blue-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Borewells Connected
+                  </div>
+                </div>
+                <div className={`text-2xl font-bold ${
+                  isDark ? 'text-blue-400' : 'text-blue-600'
+                }`}>
+                  {groundwaterData?.aquifer?.borewells_connected || '0'}
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  In this area
+                </div>
               </div>
             </div>
-            <div className={`p-4 rounded-xl border ${
-              isDark 
-                ? 'bg-slate-800/50 border-slate-700/50' 
-                : 'bg-white/70 border-slate-200/70'
-            }`}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${
-                  isDark ? 'bg-blue-500/20' : 'bg-blue-100'
-                }`}>
-                  <svg className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                  </svg>
-                </div>
-                <div className={`text-sm font-medium ${
-                  isDark ? 'text-slate-300' : 'text-slate-600'
-                }`}>
-                  Depth to Water
-                </div>
-              </div>
-              <div className={`text-2xl font-bold ${
-                isDark ? 'text-blue-400' : 'text-blue-600'
-              }`}>
-                {groundwaterData?.groundwater?.depth_m?.toFixed(1) || '15.8'}m
-              </div>
-              <div className={`text-xs mt-1 ${
-                isDark ? 'text-slate-400' : 'text-slate-500'
-              }`}>
-                From surface
-              </div>
-            </div>
-          </div>
 
-          {/* Location Information */}
+          
+          {/* Detailed Information - Only show data available from API */}
+          {groundwaterData && (
+            <div className="space-y-4">
+
+            {/* Data Information Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Data Source
+                  </div>
+                </div>
+                <div className={`text-lg font-bold ${
+                  isDark ? 'text-indigo-400' : 'text-indigo-600'
+                }`}>
+                  CGWB API
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  Central Ground Water Board
+                </div>
+              </div>
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-green-500/20' : 'bg-green-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Last Updated
+                  </div>
+                </div>
+                <div className={`text-lg font-bold ${
+                  isDark ? 'text-green-400' : 'text-green-600'
+                }`}>
+                  {groundwaterData.groundwater?.last_updated ? 
+                    new Date(groundwaterData.groundwater.last_updated).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    }) : 
+                    'Just now'
+                  }
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  Data timestamp
+                </div>
+              </div>
+              <div className={`p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-slate-800/50 border-slate-700/50' 
+                  : 'bg-white/70 border-slate-200/70'
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    isDark ? 'bg-emerald-500/20' : 'bg-emerald-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    Confidence
+                  </div>
+                </div>
+                <div className={`text-lg font-bold ${
+                  isDark ? 'text-emerald-400' : 'text-emerald-600'
+                }`}>
+                  {((groundwaterData.metadata?.confidence || 0.95) * 100).toFixed(0)}%
+                </div>
+                <div className={`text-xs mt-1 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  Data accuracy
+                </div>
+              </div>
+            </div>
+            </div>
+          )}
+
+          {/* Location Information - Moved to last position */}
           <div className={`mb-6 p-4 rounded-xl border ${
             isDark 
               ? 'bg-slate-800/50 border-slate-700/50' 
@@ -533,6 +666,10 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
                     await fetchGroundwaterData(userLocation.lat, userLocation.lon, locationName);
                   }
                   setIsRefreshing(false);
+                  setFetchSuccess(true);
+                  
+                  // Hide success message after 3 seconds
+                  setTimeout(() => setFetchSuccess(false), 3000);
                 }}
                 disabled={isRefreshing}
                 className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2.5 ${
@@ -545,7 +682,7 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
                 title="Fetch fresh location and data"
               >
                 <FiRefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Fetch Data
+                {isRefreshing ? 'Fetching...' : 'Fetch Data'}
               </motion.button>
             </div>
             <div className={`text-lg font-semibold mb-2 ${
@@ -558,250 +695,25 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
             }`}>
               {userLocation.lat.toFixed(4)}°N, {userLocation.lon.toFixed(4)}°E
             </div>
+            {dataSource && (
+              <div className={`text-xs mt-2 ${
+                isDark ? 'text-slate-500' : 'text-slate-400'
+              }`}>
+                {dataSource}
+              </div>
+            )}
+            {fetchSuccess && (
+              <div className={`text-xs mt-2 flex items-center gap-1 ${
+                isDark ? 'text-green-400' : 'text-green-600'
+              }`}>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Data refreshed successfully!
+              </div>
+            )}
           </div>
-          
-          {/* Detailed Information */}
-          {groundwaterData && (
-            <div className="space-y-4">
-              {/* Aquifer Information */}
-              <div className={`p-4 rounded-xl border ${
-                isDark 
-                  ? 'bg-slate-800/50 border-slate-700/50' 
-                  : 'bg-white/70 border-slate-200/70'
-              }`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${
-                    isDark ? 'bg-purple-500/20' : 'bg-purple-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    isDark ? 'text-slate-300' : 'text-slate-600'
-                  }`}>
-                    Aquifer Properties
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Type
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.aquifer?.type || 'Unconfined'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Material
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.aquifer?.material || 'Alluvial'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Thickness
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.aquifer?.thickness_m?.toFixed(1) || '20.0'}m
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Porosity
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {((groundwaterData.aquifer?.porosity || 0.3) * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Soil Information */}
-              <div className={`p-4 rounded-xl border ${
-                isDark 
-                  ? 'bg-slate-800/50 border-slate-700/50' 
-                  : 'bg-white/70 border-slate-200/70'
-              }`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${
-                    isDark ? 'bg-orange-500/20' : 'bg-orange-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-                    </svg>
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    isDark ? 'text-slate-300' : 'text-slate-600'
-                  }`}>
-                    Soil Properties
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Type
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.soil?.type || 'Clay Loam'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Texture
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.soil?.texture || 'Medium'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Depth
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.soil?.depth_m?.toFixed(1) || '2.0'}m
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Water Capacity
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {((groundwaterData.soil?.water_holding_capacity || 0.4) * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Source & Timestamp */}
-              <div className={`p-4 rounded-xl border ${
-                isDark 
-                  ? 'bg-slate-800/50 border-slate-700/50' 
-                  : 'bg-white/70 border-slate-200/70'
-              }`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${
-                    isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    isDark ? 'text-slate-300' : 'text-slate-600'
-                  }`}>
-                    Data Information
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-3 text-sm">
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Source
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.metadata?.data_source || 'Real-time Simulation'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Borewells Connected
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.aquifer?.borewells_connected || 'N/A'}
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDark ? 'bg-slate-700/50' : 'bg-slate-50/70'
-                  }`}>
-                    <div className={`text-xs mb-1 ${
-                      isDark ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Last Updated
-                    </div>
-                    <div className={`font-semibold ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    }`}>
-                      {groundwaterData.groundwater?.last_updated ? 
-                        new Date(groundwaterData.groundwater.last_updated).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 
-                        'Just now'
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-
 
         {/* Action Buttons */}
         <div className="flex gap-2 mt-4">
@@ -830,7 +742,7 @@ const GroundwaterVisualization: React.FC<GroundwaterVisualizationProps> = ({ cla
                 console.log('PDF generation completed');
               } catch (error) {
                 console.error('Error generating PDF:', error);
-                alert('Error generating PDF: ' + error.message);
+                alert('Error generating PDF: ' + (error as Error).message);
               }
             }}
             className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${

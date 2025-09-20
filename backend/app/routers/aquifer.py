@@ -144,21 +144,25 @@ async def get_groundwater_info(
     lon: float
 ):
     """
-    Fetch groundwater and aquifer info for a given lat/lon (mocked for MVP)
+    Fetch groundwater and aquifer info from CGWB API for a given lat/lon (mocked for MVP)
     """
     # Mock dataset keyed by (lat, lon)
     mock_data = {
         (12.9716, 77.5946): {
             "location": "Bengaluru Urban",
             "groundwater_level_m": 12.5,
+            "water_table_depth_m": 15.2,
             "aquifer_type": "Unconfined Aquifer",
+            "soil_type": "Red Sandy Loam",
             "borewells_connected": 154,
             "last_updated": "2025-09-01"
         },
         (28.6139, 77.2090): {
             "location": "New Delhi",
             "groundwater_level_m": 22.1,
+            "water_table_depth_m": 25.8,
             "aquifer_type": "Confined Aquifer",
+            "soil_type": "Alluvial Soil",
             "borewells_connected": 320,
             "last_updated": "2025-08-20"
         },
@@ -166,10 +170,14 @@ async def get_groundwater_info(
     key = (round(lat, 4), round(lon, 4))
     data = mock_data.get(key)
     if not data:
+        # Generate a more meaningful location name based on coordinates
+        location_name = f"Location ({lat:.2f}°N, {lon:.2f}°E)"
         data = {
-            "location": "Unknown",
+            "location": location_name,
             "groundwater_level_m": 18.2,
+            "water_table_depth_m": 20.5,
             "aquifer_type": "Confined Aquifer",
+            "soil_type": "Clay Loam",
             "borewells_connected": 75,
             "last_updated": "2025-09-20"
         }

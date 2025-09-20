@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../components/ThemeProvider';
 import Aquifer3DVisualization from '../components/Aquifer3DVisualization';
 import Aquifer2DFallback from '../components/Aquifer2DFallback';
+import EnhancedRainwaterSchematic from '../components/EnhancedRainwaterSchematic';
 import { VisualizationConfig, VisualizationCallbacks, PerformanceSettings } from '../components/types';
 import { EnhancedVisualizationConfig, EnhancedSoilLayer, ENHANCED_SOIL_COLORS } from '../components/types.enhanced';
 import sampleData from '../data/aquifer3d-sample.json';
@@ -18,6 +19,7 @@ interface Aquifer {
     depth_from: number; 
     depth_to: number; 
     water_table: number; 
+    water_table_depth?: number; 
     color: string; 
     aquifer_type: string; 
     borewells_connected: number; 
@@ -58,7 +60,8 @@ const fetchAquiferFromBackend = async (lat: number, lon: number): Promise<Aquife
 // Fetch real-time aquifer depth data
 const fetchAquiferDepth = async (lat: number, lon: number): Promise<number> => {
     try {
-        const url = `/api/aquifer-depth?lat=${lat}&lon=${lon}`;
+        const apiBase = import.meta.env.VITE_API_BASE || '/api';
+        const url = `${apiBase}/groundwater/aquifer-depth?lat=${lat}&lon=${lon}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch aquifer depth');
         const data = await res.json();
@@ -101,6 +104,8 @@ function VisualAquiferDepthDisplay() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [selectedElement, setSelectedElement] = useState<'borewell' | 'shaft' | 'soil' | 'rooftop' | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+    const [fetchSuccess, setFetchSuccess] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [dataSource, setDataSource] = useState<string>('Loading...');
     const [enhancedSoilLayers, setEnhancedSoilLayers] = useState<EnhancedSoilLayer[]>([]);
@@ -163,6 +168,7 @@ function VisualAquiferDepthDisplay() {
                             depth_from: 0,
                             depth_to: groundwaterData.aquifer.thickness_m,
                             water_table: groundwaterData.groundwater.level_m,
+                            water_table_depth: groundwaterData.groundwater.depth_m,
                             color: getDepthColor(groundwaterData.groundwater.level_m),
                             aquifer_type: groundwaterData.aquifer.type,
                             borewells_connected: groundwaterData.aquifer.borewells_connected || 1
@@ -346,17 +352,6 @@ function VisualAquiferDepthDisplay() {
         onSelection: setSelectedElement
     }), []);
 
-    const handleShaftSizeChange = useCallback((size: 'small' | 'medium' | 'large') => {
-        setVisualizationConfig(prev => ({
-            ...prev,
-            shaft: {
-                ...prev.shaft,
-                size_category: size,
-                diameter_m: size === 'small' ? 0.5 : size === 'medium' ? 1.0 : 1.5,
-                depth_m: size === 'small' ? 20 : size === 'medium' ? 40 : 60
-            }
-        }));
-    }, []);
 
 
     if (error) {
@@ -412,26 +407,28 @@ function VisualAquiferDepthDisplay() {
                                 title="Show keyboard shortcuts (H)"
                             >
                                 <FiInfo className="w-3 h-3" />
-                                Help
+                                Keyboard
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* Data Source Information */}
-                <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                <div className="mb-4 p-4 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-lg border border-indigo-200 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full animate-pulse shadow-sm"></div>
                             <div>
-                                <span className="text-sm font-medium text-blue-800">Data Source:</span>
-                                <span className="text-sm text-blue-600 ml-2">{dataSource}</span>
+                                <span className="text-sm font-medium text-indigo-800">Data Source:</span>
+                                <span className="text-sm text-indigo-600 ml-2">{dataSource}</span>
                             </div>
                         </div>
                         {isLoading && (
                             <div className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                <span className="text-sm text-blue-600">Loading real data...</span>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                                <span className="text-sm text-indigo-600">
+                                    {isFetchingLocation ? 'Getting location...' : 'Loading real data...'}
+                                </span>
                             </div>
                         )}
                     </div>
@@ -439,15 +436,15 @@ function VisualAquiferDepthDisplay() {
                 
                 {/* Enhanced Information Panel */}
                 {enhancedSoilLayers.length > 0 && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-6 space-y-3">
                         {/* Top Row - Soil and Aquifer */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* Soil Type Card */}
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200/50 shadow-sm">
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200/50 shadow-sm">
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-green-500 to-emerald-600"></div>
-                                        <span className="text-xs font-semibold text-green-800">Soil Type</span>
+                                        <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-amber-500 to-orange-600"></div>
+                                        <span className="text-xs font-semibold text-amber-800">Soil Type</span>
                                     </div>
                                 </div>
                                 <div className="mt-1 flex items-center gap-1.5">
@@ -457,8 +454,8 @@ function VisualAquiferDepthDisplay() {
                                                 className="w-3 h-3 rounded-full border border-white shadow-sm"
                                                 style={{ backgroundColor: layer.color }}
                                             ></div>
-                                            <span className="text-xs font-medium text-green-700">{layer.name}</span>
-                                            <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">{layer.texture}</span>
+                                            <span className="text-xs font-medium text-amber-700">{layer.name}</span>
+                                            <span className="text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">{layer.texture}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -466,15 +463,15 @@ function VisualAquiferDepthDisplay() {
 
                             {/* Aquifer Type Card */}
                             {data && data.aquifers[0] && (
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200/50 shadow-sm">
+                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg p-3 border border-violet-200/50 shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-blue-500 to-indigo-600"></div>
-                                            <span className="text-xs font-semibold text-blue-800">Aquifer Type</span>
+                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-violet-500 to-purple-600"></div>
+                                            <span className="text-xs font-semibold text-violet-800">Aquifer Type</span>
                                         </div>
                                     </div>
                                     <div className="mt-1">
-                                        <span className="text-xs font-medium text-blue-700">{data.aquifers[0].aquifer_type}</span>
+                                        <span className="text-xs font-medium text-violet-700">{data.aquifers[0].aquifer_type}</span>
                                     </div>
                                 </div>
                             )}
@@ -482,18 +479,34 @@ function VisualAquiferDepthDisplay() {
 
                         {/* Middle Row - Water Data */}
                         {data && data.aquifers[0] && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {/* Groundwater Level Card */}
-                                <div className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-lg p-3 border border-cyan-200/50 shadow-sm">
+                                <div className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-lg p-3 border border-sky-200/50 shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-cyan-500 to-teal-600"></div>
-                                            <span className="text-xs font-semibold text-cyan-800">Groundwater Level</span>
+                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-sky-500 to-cyan-600"></div>
+                                            <span className="text-xs font-semibold text-sky-800">Groundwater Level</span>
                                         </div>
                                     </div>
                                     <div className="mt-1 flex items-center gap-1.5">
-                                        <span className="text-sm font-bold text-cyan-700">{data.aquifers[0].water_table.toFixed(1)}m</span>
-                                        <span className="text-xs text-cyan-600 bg-cyan-100 px-1.5 py-0.5 rounded-full">depth</span>
+                                        <span className="text-sm font-bold text-sky-700">{data.aquifers[0].water_table.toFixed(1)}m</span>
+                                        <span className="text-xs text-sky-600 bg-sky-100 px-1.5 py-0.5 rounded-full">level</span>
+                                    </div>
+                                </div>
+
+                                {/* Water Table Depth Card */}
+                                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg p-3 border border-teal-200/50 shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-teal-500 to-emerald-600"></div>
+                                            <span className="text-xs font-semibold text-teal-800">Water Table Depth</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-1 flex items-center gap-1.5">
+                                        <span className="text-sm font-bold text-teal-700">
+                                            {data.aquifers[0].water_table_depth ? data.aquifers[0].water_table_depth.toFixed(1) : 'N/A'}m
+                                        </span>
+                                        <span className="text-xs text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full">depth</span>
                                     </div>
                                 </div>
                             </div>
@@ -501,75 +514,128 @@ function VisualAquiferDepthDisplay() {
 
                         {/* Bottom Row - Location and Refresh */}
                         {data && (
-                            <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg p-3 border border-slate-200/50 shadow-sm">
+                            <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-3 border border-rose-200/50 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-indigo-500 to-purple-600"></div>
-                                            <span className="text-xs font-semibold text-slate-800">Location</span>
+                                            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-gradient-to-br from-rose-500 to-pink-600"></div>
+                                            <span className="text-xs font-semibold text-rose-800">Location</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-xs font-medium text-slate-700">{data.location.name}</span>
-                                            <span className="text-xs text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full">{new Date(data.timestamp).toLocaleDateString()}</span>
+                                            <span className="text-xs font-medium text-rose-700">{data.location.name}</span>
+                                            <span className="text-xs text-rose-500 bg-rose-200 px-1.5 py-0.5 rounded-full">{new Date(data.timestamp).toLocaleDateString()}</span>
+                                            {fetchSuccess && (
+                                                <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                                    <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Updated
+                                                </span>
+                                            )}
                                             {/* Refresh Button beside last updated */}
                                             <button
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     setIsLoading(true);
                                                     setError(null);
                                                     setData(null);
                                                     
-                                                    // Fetch enhanced groundwater data from Indian APIs
-                                                    const fetchEnhancedData = async () => {
-                                                        try {
-                                                            const response = await fetch(`/api/groundwater/info?lat=${lat}&lon=${lon}`);
-                                                            if (!response.ok) {
-                                                                throw new Error('Failed to fetch groundwater data');
+                                                    try {
+                                                        // First, get fresh location
+                                                        console.log('🔄 Fetching fresh location...');
+                                                        setIsFetchingLocation(true);
+                                                        let newLat = lat;
+                                                        let newLon = lon;
+                                                        
+                                                        if ('geolocation' in navigator) {
+                                                            try {
+                                                                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                                                                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                                                        enableHighAccuracy: true,
+                                                                        timeout: 10000,
+                                                                        maximumAge: 60000
+                                                                    });
+                                                                });
+                                                                
+                                                                newLat = position.coords.latitude;
+                                                                newLon = position.coords.longitude;
+                                                                setLat(newLat);
+                                                                setLon(newLon);
+                                                                console.log('✅ Fresh location obtained:', { lat: newLat, lon: newLon });
+                                                            } catch (geoError) {
+                                                                console.warn('⚠️ Geolocation failed, using current coordinates:', geoError);
                                                             }
-                                                            const apiData = await response.json();
-                                                            
-                                                            // Transform API data to match expected format
-                                                            const transformedData: AquiferData = {
-                                                                location: {
-                                                                    name: apiData.location,
-                                                                    lat: lat,
-                                                                    lon: lon
-                                                                },
-                                                                data_source: 'India WRIS (Primary)',
-                                                                aquifers: [{
-                                                                    id: `${lat},${lon}`,
-                                                                    name: apiData.location,
-                                                                    depth_from: 0,
-                                                                    depth_to: 80,
-                                                                    aquifer_type: apiData.aquifer_type,
-                                                                    water_table: apiData.groundwater_level_m,
-                                                                    color: getDepthColor(apiData.groundwater_level_m),
-                                                                    borewells_connected: apiData.borewells_connected
-                                                                }],
-                                                                timestamp: apiData.last_updated
-                                                            };
-                                                            
-                                                            setData(transformedData);
-                                                            setError(null);
-                                                        } catch (err) {
-                                                            console.error('Error fetching groundwater data:', err);
-                                                            setError('Failed to fetch groundwater data');
-                                                        } finally {
-                                                            setIsLoading(false);
                                                         }
-                                                    };
-                                                    
-                                                    fetchEnhancedData();
+                                                        setIsFetchingLocation(false);
+                                                        
+                                                        // Fetch enhanced groundwater data from Indian APIs
+                                                        const fetchEnhancedData = async () => {
+                                                            try {
+                                                                console.log('🔄 Fetching groundwater data for:', { lat: newLat, lon: newLon });
+                                                                const response = await fetch(`/api/groundwater/info?lat=${newLat}&lon=${newLon}`);
+                                                                if (!response.ok) {
+                                                                    throw new Error('Failed to fetch groundwater data');
+                                                                }
+                                                                const apiData = await response.json();
+                                                                
+                                                                // Transform API data to match expected format
+                                                                const transformedData: AquiferData = {
+                                                                    location: {
+                                                                        name: apiData.location,
+                                                                        lat: newLat,
+                                                                        lon: newLon
+                                                                    },
+                                                                    data_source: 'India WRIS (Primary)',
+                                                                    aquifers: [{
+                                                                        id: `${newLat},${newLon}`,
+                                                                        name: apiData.location,
+                                                                        depth_from: 0,
+                                                                        depth_to: 80,
+                                                                        aquifer_type: apiData.aquifer_type,
+                                                                        water_table: apiData.groundwater_level_m,
+                                                                        water_table_depth: apiData.water_table_depth_m,
+                                                                        color: getDepthColor(apiData.groundwater_level_m),
+                                                                        borewells_connected: apiData.borewells_connected
+                                                                    }],
+                                                                    timestamp: apiData.last_updated
+                                                                };
+                                                                
+                                                                setData(transformedData);
+                                                                setError(null);
+                                                                setFetchSuccess(true);
+                                                                console.log('✅ Groundwater data refreshed successfully:', {
+                                                                    location: apiData.location,
+                                                                    groundwater_level: apiData.groundwater_level_m,
+                                                                    aquifer_type: apiData.aquifer_type,
+                                                                    borewells_connected: apiData.borewells_connected
+                                                                });
+                                                                
+                                                                // Hide success message after 3 seconds
+                                                                setTimeout(() => setFetchSuccess(false), 3000);
+                                                            } catch (err) {
+                                                                console.error('❌ Error fetching groundwater data:', err);
+                                                                setError('Failed to fetch groundwater data');
+                                                            } finally {
+                                                                setIsLoading(false);
+                                                            }
+                                                        };
+                                                        
+                                                        await fetchEnhancedData();
+                                                    } catch (err) {
+                                                        console.error('❌ Error in refresh process:', err);
+                                                        setError('Failed to refresh data');
+                                                        setIsLoading(false);
+                                                    }
                                                 }}
                                                 disabled={isLoading}
-                                                className={`p-1 rounded-md transition-all duration-200 ${
+                                                className={`p-2 rounded-lg transition-all duration-200 shadow-sm ${
                                                     isLoading 
-                                                        ? 'bg-slate-200 cursor-not-allowed' 
-                                                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-sm hover:shadow-md'
+                                                        ? 'bg-gray-300 cursor-not-allowed shadow-inner' 
+                                                        : 'bg-gradient-to-br from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 hover:shadow-md active:scale-95 border border-gray-300/50'
                                                 }`}
-                                                title="Fetch fresh data from API"
+                                                title="Fetch fresh location and data from API"
                                             >
                                                 <svg 
-                                                    className={`w-3 h-3 ${isLoading ? 'animate-spin text-slate-400' : 'text-white'}`} 
+                                                    className={`w-4 h-4 ${isLoading ? 'animate-spin text-slate-500' : 'text-gray-700'}`} 
                                                     fill="none" 
                                                     stroke="currentColor" 
                                                     viewBox="0 0 24 24"
@@ -591,33 +657,29 @@ function VisualAquiferDepthDisplay() {
                 )}
 
                 {/* Main 3D Visualization */}
-                <div className="mb-6 h-96 rounded-2xl overflow-hidden shadow-lg border relative">
+                <div className="mt-8 mb-12 h-96 rounded-2xl overflow-hidden shadow-lg border relative">
                     {isLoading && (
-                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/90 to-slate-50/80 backdrop-blur-sm flex items-center justify-center z-10">
                             <div className="text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                                <p className="text-blue-600 font-medium">Loading groundwater data from Indian APIs...</p>
-                                <p className="text-sm text-gray-500 mt-2">Trying India WRIS, CGWB, and other sources</p>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                                <p className="text-indigo-600 font-medium">
+                                    {isFetchingLocation ? 'Getting your current location...' : 'Loading groundwater data from Indian APIs...'}
+                                </p>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    {isFetchingLocation ? 'Please allow location access for accurate data' : 'Trying India WRIS, CGWB, and other sources'}
+                                </p>
                             </div>
                         </div>
                     )}
                     {useFallback ? (
-                        <Aquifer2DFallback
-                            config={visualizationConfig}
-                            callbacks={visualizationCallbacks}
-                            waterLevel={waterLevel}
-                            animationTime={animationTime}
-                            isPlaying={isPlaying}
-                            onLevelChange={setWaterLevel}
-                            onTogglePlay={() => setIsPlaying(!isPlaying)}
-                            enhancedSoilLayers={enhancedSoilLayers}
-                            dataSource={dataSource}
-                            isLoading={isLoading}
+                        <EnhancedRainwaterSchematic
                             lat={lat}
                             lon={lon}
-                            aquiferName={data?.aquifers?.[0]?.name}
-                            soilType={enhancedSoilLayers?.[0]?.name}
-                            soilColor={enhancedSoilLayers?.[0]?.color}
+                            className="w-full h-full"
+                            showControls={true}
+                            autoPlay={true}
+                            loopDuration={20}
+                            dataUpdateInterval={30000}
                         />
                     ) : (
                         <Aquifer3DVisualization
@@ -628,102 +690,6 @@ function VisualAquiferDepthDisplay() {
                     )}
                 </div>
 
-                {/* Controls Panel */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    {/* Shaft Configuration */}
-                    <div className="bg-gray-50 rounded-2xl p-4 shadow-inner border">
-                        <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <FiSettings className="text-blue-600" />
-                            Shaft Configuration
-                        </h3>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="text-sm text-gray-600 block mb-1">Shaft Size</label>
-                                <select
-                                    value={visualizationConfig.shaft.size_category}
-                                    onChange={(e) => handleShaftSizeChange(e.target.value as 'small' | 'medium' | 'large')}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="small">Small (0.5m)</option>
-                                    <option value="medium">Medium (1.0m)</option>
-                                    <option value="large">Large (1.5m)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-sm text-gray-600 block mb-1">Depth: {visualizationConfig.shaft.depth_m}m</label>
-                                <input
-                                    type="range"
-                                    min="10"
-                                    max="100"
-                                    value={visualizationConfig.shaft.depth_m}
-                                    onChange={(e) => setVisualizationConfig(prev => ({
-                                        ...prev,
-                                        shaft: { ...prev.shaft, depth_m: parseInt(e.target.value) }
-                                    }))}
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Performance Settings */}
-                    <div className="bg-gray-50 rounded-2xl p-4 shadow-inner border">
-                        <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <FiSettings className="text-green-600" />
-                            Performance
-                        </h3>
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={performanceSettings.enablePerformanceMode}
-                                    onChange={(e) => setPerformanceSettings(prev => ({
-                                        ...prev,
-                                        enablePerformanceMode: e.target.checked
-                                    }))}
-                                    className="rounded"
-                                />
-                                <span className="text-sm text-gray-600">Performance Mode</span>
-                            </label>
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={performanceSettings.enableLOD}
-                                    onChange={(e) => setPerformanceSettings(prev => ({
-                                        ...prev,
-                                        enableLOD: e.target.checked
-                                    }))}
-                                    className="rounded"
-                                />
-                                <span className="text-sm text-gray-600">Level of Detail</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Information Panel */}
-                    <div className="bg-gray-50 rounded-2xl p-4 shadow-inner border">
-                        <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <FiInfo className="text-purple-600" />
-                            Information
-                        </h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span>Location:</span>
-                                <span className="font-medium">{data?.location.name || 'Unknown'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Water Level:</span>
-                                <span className="font-medium">{waterLevel.toFixed(1)}m</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Mode:</span>
-                                <span className={useFallback ? "text-yellow-600" : "text-green-600"}>
-                                    {useFallback ? "2D Fallback" : "3D WebGL"}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Keyboard Shortcuts Help Panel */}
                 {showShortcuts && (

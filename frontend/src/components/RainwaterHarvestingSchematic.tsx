@@ -59,7 +59,8 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
   const fetchAquiferDepth = async (lat: number, lon: number): Promise<number> => {
     try {
       setApiLoading(true);
-      const url = `/api/aquifer-depth?lat=${lat}&lon=${lon}`;
+      const apiBase = import.meta.env.VITE_API_BASE || '/api';
+      const url = `${apiBase}/groundwater/aquifer-depth?lat=${lat}&lon=${lon}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch aquifer depth');
       const data = await res.json();
@@ -413,33 +414,109 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
         ctx.stroke();
       }
       
-      // Phase 3: Recharge shaft to borewell (10-15 seconds)
+      // Consolidated animation logic for all phases
       if (isPlaying) {
         const totalCycleTime = 20;
         const cycleTime = (animationTime * 2) % totalCycleTime;
         
-        // Keep desilting pit and recharge pit/trench/shaft full after their phases
-        if (cycleTime > 5) {
+        // Phase 1: Rooftop to desilting pit (0-5 seconds)
+        if (cycleTime <= 5) {
+          const flowProgress = cycleTime / 5;
+          const startX = rooftop.x + rooftop.width;
+          const startY = rooftop.y + 2;
+          const endX = pit.x;
+          const groundY = 120;
+          
+          // Draw water droplets flowing through the pipe
+          ctx.fillStyle = '#87CEEB';
+          ctx.globalAlpha = 0.8;
+          const pipeLength = endX - startX;
+          const verticalDrop = groundY - startY;
+          
+          // Vertical drop animation
+          if (flowProgress < 0.3) {
+            const verticalProgress = flowProgress / 0.3;
+            for (let i = 0; i < 4; i++) {
+              const dropletY = startY + (verticalProgress * verticalDrop - i * 8) % verticalDrop;
+              if (dropletY >= startY && dropletY <= groundY) {
+                ctx.beginPath();
+                ctx.arc(startX, dropletY, 2, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+          
+          // Horizontal flow animation
+          if (flowProgress >= 0.3) {
+            const horizontalProgress = (flowProgress - 0.3) / 0.7;
+            for (let i = 0; i < 6; i++) {
+              const dropletX = startX + (horizontalProgress * pipeLength - i * 15) % pipeLength;
+              if (dropletX >= startX && dropletX <= endX) {
+                ctx.beginPath();
+                ctx.arc(dropletX, groundY, 2, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+          
+          // Fill desilting pit progressively
+          const pitFillProgress = Math.max(0, (cycleTime - 1) / 4);
+          const pitWaterLevel = Math.min(pit.height - 10, pitFillProgress * (pit.height - 10));
+          ctx.fillStyle = '#87CEEB';
+          ctx.globalAlpha = 0.8;
+          ctx.fillRect(pit.x + 5, pit.y + pit.height - pitWaterLevel, pit.width - 10, pitWaterLevel);
+        }
+        
+        // Phase 2: Desilting pit to recharge pit/trench/shaft (5-10 seconds)
+        if (cycleTime > 5 && cycleTime <= 10) {
+          // Keep desilting pit full
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
           ctx.fillRect(pit.x + 5, pit.y + 5, pit.width - 10, pit.height - 10);
-        }
-        if (cycleTime > 10) {
+          
+          // Animate water flow from desilting pit to recharge pit/trench/shaft
+          const flowProgress = (cycleTime - 5) / 5;
+          const startX = pit.x + pit.width;
+          const endX = rechargeWell.x;
+          const groundY = 120;
+          
+          // Draw water droplets flowing through the pipe
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
-          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + 5, rechargeWell.width - 10, rechargeWell.height - 10);
+          const pipeLength = endX - startX;
+          
+          for (let i = 0; i < 6; i++) {
+            const dropletX = startX + (flowProgress * pipeLength - i * 15) % pipeLength;
+            if (dropletX >= startX && dropletX <= endX) {
+              ctx.beginPath();
+              ctx.arc(dropletX, groundY, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          
+          // Fill recharge pit/trench/shaft progressively
+          const wellFillProgress = Math.max(0, (cycleTime - 6) / 4);
+          const wellWaterLevel = Math.min(rechargeWell.height - 10, wellFillProgress * (rechargeWell.height - 10));
+          ctx.fillStyle = '#87CEEB';
+          ctx.globalAlpha = 0.8;
+          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + rechargeWell.height - wellWaterLevel, rechargeWell.width - 10, wellWaterLevel);
         }
         
+        // Phase 3: Recharge shaft to borewell (10-15 seconds)
         if (cycleTime > 10 && cycleTime <= 15) {
+          // Keep previous components full
+          ctx.fillStyle = '#87CEEB';
+          ctx.globalAlpha = 0.8;
+          ctx.fillRect(pit.x + 5, pit.y + 5, pit.width - 10, pit.height - 10);
+          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + 5, rechargeWell.width - 10, rechargeWell.height - 10);
+          
           // Animate water flow from recharge pit/trench/shaft to borewell
           const flowProgress = (cycleTime - 10) / 5;
           const startX = rechargeWell.x + rechargeWell.width;
           const endX = borewell.x;
           const groundY = 120;
           
-          // Pipe is now drawn in the main drawing section for constant visibility
-          
-          // Draw water droplets flowing through the pipe (same style as other pipes)
+          // Draw water droplets flowing through the pipe
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
           const pipeLength = endX - startX;
@@ -454,94 +531,56 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
             }
           }
           
-          // Water flow complete - consistent with other pipes
-          
           // Fill borewell progressively
-          const borewellFillProgress = Math.max(0, (cycleTime - 10.5) / 4.5); // Start filling after 10.5 seconds
-          
-          // Calculate second screen level (internal pipe start)
-          const secondScreenLevel = borewell.y + 50 + 40; // second level
-          const maxFillHeight = borewell.y + borewell.height - secondScreenLevel; // Only fill up to second level
+          const borewellFillProgress = Math.max(0, (cycleTime - 10.5) / 4.5);
+          const secondScreenLevel = borewell.y + 50 + 40;
+          const maxFillHeight = borewell.y + borewell.height - secondScreenLevel;
           const borewellWaterLevel = Math.min(maxFillHeight, borewellFillProgress * maxFillHeight);
           ctx.fillStyle = '#4A90E2';
           ctx.globalAlpha = 0.7;
           ctx.fillRect(borewell.x + 5, borewell.y + borewell.height - borewellWaterLevel, borewell.width - 10, borewellWaterLevel);
         }
         
-        ctx.globalAlpha = 1;
-      }
-      
-      // Phase 4: Borewell to aquifer through internal pipe (15-20 seconds)
-      if (isPlaying) {
-        const totalCycleTime = 20;
-        const cycleTime = (animationTime * 2) % totalCycleTime;
-        
-        // Keep all previous components full
-        if (cycleTime > 5) {
+        // Phase 4: Borewell to aquifer through internal pipe (15-20 seconds)
+        if (cycleTime > 15 && cycleTime <= 20) {
+          // Keep all previous components full
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
           ctx.fillRect(pit.x + 5, pit.y + 5, pit.width - 10, pit.height - 10);
-        }
-        if (cycleTime > 10) {
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
           ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + 5, rechargeWell.width - 10, rechargeWell.height - 10);
-        }
-        
-        if (cycleTime > 15 && cycleTime <= 20) {
-          // Continue filling borewell during phase 4
-          // Calculate second screen level (internal pipe start)
-          const secondScreenLevelPhase4 = borewell.y + 50 + 40; // second level
-          const maxFillHeightPhase4 = borewell.y + borewell.height - secondScreenLevelPhase4; // Only fill up to second level
           
-          // In phase 4, continue filling from where phase 3 left off (at second level) to FULL level
-          const phase3EndProgress = 1.0; // Phase 3 completed at second level
-          const phase4Progress = Math.max(0, (cycleTime - 15) / 5); // Phase 4 progress (0-1)
-          const totalProgress = Math.min(1.0, phase3EndProgress + phase4Progress * 0.8); // Continue filling to full level
-          const borewellWaterLevel = Math.min(borewell.height - 20, totalProgress * (borewell.height - 20)); // Fill to full height
-          
-          // Draw the current borewell water level
+          // Continue filling borewell to full level
+          const phase4Progress = (cycleTime - 15) / 5;
+          const borewellWaterLevel = Math.min(borewell.height - 20, (1.0 + phase4Progress * 0.8) * (borewell.height - 20));
           ctx.fillStyle = '#4A90E2';
           ctx.globalAlpha = 0.7;
           ctx.fillRect(borewell.x + 5, borewell.y + borewell.height - borewellWaterLevel, borewell.width - 10, borewellWaterLevel);
           
-          // Check if water level has reached the second screen level (internal pipe start)
+          // Animate water flow through internal pipe to aquifer
+          const secondScreenLevel = borewell.y + 50 + 40;
           const waterTop = borewell.y + borewell.height - borewellWaterLevel;
-          const hasReachedSecondLevel = waterTop <= secondScreenLevelPhase4;
+          const hasReachedSecondLevel = waterTop <= secondScreenLevel;
           
-          // In phase 4, water should always be flowing through internal pipe since we start from second level
-          const shouldFlowThroughPipe = true; // Always flow in phase 4
-          
-          // Calculate when water first reached the second screen level
-          const secondLevelProgress = (secondScreenLevelPhase4 - borewell.y) / (borewell.height - 20);
-          const timeWhenReachedSecondLevel = 10.5 + (secondLevelProgress * 4.5); // When water reaches second level
-          
-          // Animate water flow through internal pipe when water reaches second level
-          if (shouldFlowThroughPipe) {
-            const internalPipeStartY = secondScreenLevelPhase4;
-            const internalPipeEndY = 320 - 28; // above aquifer
+          if (hasReachedSecondLevel) {
+            const internalPipeStartY = secondScreenLevel;
+            const internalPipeEndY = 320 - 28;
             const internalPipeWidth = Math.max(12, Math.min(18, borewell.width * 0.22));
             const internalPipeX = borewellCenterX - internalPipeWidth / 2;
             
-            // Calculate flow progress based on phase 4 progress (simpler since we always flow in phase 4)
-            const flowProgress = Math.min(1, phase4Progress); // Flow progresses with phase 4
-            
-            // Draw water droplets flowing through the internal pipe with enhanced visibility
+            const flowProgress = Math.min(1, phase4Progress);
             const pipeHeight = internalPipeEndY - internalPipeStartY;
             const flowDistance = flowProgress * pipeHeight;
             
-            // Create multiple layers of water droplets for maximum visibility (ENHANCED)
-            for (let layer = 0; layer < 8; layer++) {
-              // More color variations for additional layers
-              const colors = ['#0066FF', '#1E90FF', '#4A90E2', '#87CEEB', '#B0E0E6', '#E0F6FF', '#00BFFF', '#0080FF'];
+            // Draw water droplets flowing through internal pipe
+            for (let layer = 0; layer < 3; layer++) {
+              const colors = ['#0066FF', '#1E90FF', '#4A90E2'];
               ctx.fillStyle = colors[layer];
-              ctx.globalAlpha = 1.0 - layer * 0.08; // Reduced alpha reduction for more visibility
+              ctx.globalAlpha = 1.0 - layer * 0.2;
               
-              for (let i = 0; i < 30; i++) { // Increased from 20 to 30 droplets
-                const dropletY = internalPipeStartY + (flowDistance - i * 3 - layer * 1.2) % pipeHeight; // Closer spacing
+              for (let i = 0; i < 15; i++) {
+                const dropletY = internalPipeStartY + (flowDistance - i * 3 - layer * 1.2) % pipeHeight;
                 if (dropletY >= internalPipeStartY && dropletY <= internalPipeEndY) {
-                  // Larger droplet size for more prominent stream
-                  const dropletSize = 3.5 + Math.sin(animationTime * 4 + i + layer) * 1.8; // Increased size
+                  const dropletSize = 2.5 + Math.sin(animationTime * 4 + i + layer) * 1.0;
                   ctx.beginPath();
                   ctx.arc(internalPipeX + internalPipeWidth / 2, dropletY, dropletSize, 0, Math.PI * 2);
                   ctx.fill();
@@ -549,109 +588,20 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
               }
             }
             
-            // Add additional side layers for even more density (ENHANCED)
-            for (let sideLayer = 0; sideLayer < 5; sideLayer++) { // Increased from 3 to 5 layers
-              ctx.fillStyle = sideLayer === 0 ? '#0066FF' : sideLayer === 1 ? '#1E90FF' : sideLayer === 2 ? '#4A90E2' : sideLayer === 3 ? '#87CEEB' : '#00BFFF';
-              ctx.globalAlpha = 0.8 - sideLayer * 0.15; // Higher opacity
-              
-              for (let i = 0; i < 25; i++) { // Increased from 15 to 25 droplets
-                const offsetX = (sideLayer - 2) * 2.5; // Offset droplets to the sides
-                const dropletY = internalPipeStartY + (flowDistance - i * 4 - sideLayer * 1.5) % pipeHeight; // Closer spacing
-                if (dropletY >= internalPipeStartY && dropletY <= internalPipeEndY) {
-                  const dropletSize = 2.8 + Math.sin(animationTime * 3.5 + i + sideLayer) * 1.2; // Larger size
-                  ctx.beginPath();
-                  ctx.arc(internalPipeX + internalPipeWidth / 2 + offsetX, dropletY, dropletSize, 0, Math.PI * 2);
-                  ctx.fill();
-                }
-              }
-            }
-            
-            // Add multiple flowing water stream effects for enhanced visibility (ENHANCED)
-            for (let stream = 0; stream < 5; stream++) { // Increased from 3 to 5 streams
-              const streamColors = ['#0066FF', '#1E90FF', '#4A90E2', '#87CEEB', '#00BFFF'];
-              ctx.strokeStyle = streamColors[stream];
-              ctx.lineWidth = 12 - stream * 2; // Increased line width
-              ctx.globalAlpha = 0.95 - stream * 0.15; // Higher opacity
-              ctx.setLineDash([8, 4]); // Slightly different dash pattern
-              ctx.beginPath();
-              ctx.moveTo(internalPipeX + internalPipeWidth / 2, internalPipeStartY);
-              ctx.lineTo(internalPipeX + internalPipeWidth / 2, internalPipeStartY + flowDistance);
-              ctx.stroke();
-            }
-            ctx.setLineDash([]);
-            
-            // Add enhanced pulsing glow effect around the internal pipe (ENHANCED)
-            const glowIntensity = Math.sin(animationTime * 6) * 0.5 + 0.7; // Increased intensity
-            for (let glow = 0; glow < 4; glow++) { // Increased from 2 to 4 glow layers
-              ctx.strokeStyle = `rgba(0, 102, 255, ${glowIntensity * (0.9 - glow * 0.2)})`; // Higher opacity
-              ctx.lineWidth = 20 - glow * 3; // Increased line width
-              ctx.globalAlpha = 0.6 - glow * 0.1; // Higher alpha
-              ctx.beginPath();
-              ctx.moveTo(internalPipeX + internalPipeWidth / 2, internalPipeStartY);
-              ctx.lineTo(internalPipeX + internalPipeWidth / 2, internalPipeEndY);
-              ctx.stroke();
-            }
-            
-            // Blue horizontal lines removed as requested
-            
-            // Show internal pipe connection immediately when water starts flowing
-            ctx.strokeStyle = '#00BFFF';
-            ctx.lineWidth = 4;
-            ctx.globalAlpha = 0.7;
-            ctx.setLineDash([6, 3]);
-            ctx.beginPath();
-            ctx.moveTo(borewellCenterX, internalPipeStartY);
-            ctx.lineTo(borewellCenterX, internalPipeEndY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Add water accumulation above aquifer when flow reaches the end
+            // Add water accumulation above aquifer
             if (flowProgress > 0.2) {
               const aquiferY = 320;
               const accumulationHeight = Math.min(20, (flowProgress - 0.2) * 50);
               ctx.fillStyle = '#1E90FF';
               ctx.globalAlpha = 0.8;
               ctx.fillRect(borewell.x + 5, aquiferY - accumulationHeight, borewell.width - 10, accumulationHeight);
-              
-              // Add water droplets falling from the pipe end (ENHANCED)
-              for (let i = 0; i < 15; i++) { // Increased from 8 to 15 droplets
-                const dropY = internalPipeEndY + (flowProgress - 0.2) * 25 + i * 2.5; // Increased fall distance
-                if (dropY < aquiferY) {
-                  const dropSize = 2.5 + Math.sin(animationTime * 6 + i) * 0.8; // Larger size
-                  ctx.fillStyle = '#1E90FF';
-                  ctx.globalAlpha = 0.95; // Higher opacity
-                  ctx.beginPath();
-                  ctx.arc(borewellCenterX, dropY, dropSize, 0, Math.PI * 2);
-                  ctx.fill();
-                }
-              }
-              
-              // Show connection line from borewell to aquifer when water flows
-              ctx.strokeStyle = '#1E90FF';
-              ctx.lineWidth = 3;
-              ctx.globalAlpha = 0.8;
-              ctx.setLineDash([8, 4]);
-              ctx.beginPath();
-              ctx.moveTo(borewellCenterX, internalPipeEndY);
-              ctx.lineTo(borewellCenterX, aquiferY);
-              ctx.stroke();
-              ctx.setLineDash([]);
-              
-              // Add pulsing effect to the connection line
-              const pulseIntensity = Math.sin(animationTime * 5) * 0.4 + 0.6;
-              ctx.strokeStyle = `rgba(30, 144, 255, ${pulseIntensity})`;
-              ctx.lineWidth = 5;
-              ctx.globalAlpha = 0.5;
-              ctx.beginPath();
-              ctx.moveTo(borewellCenterX, internalPipeEndY);
-              ctx.lineTo(borewellCenterX, aquiferY);
-              ctx.stroke();
             }
           }
         }
         
         ctx.globalAlpha = 1;
       }
+      
       
       // Thick internal pipe inside the borewell (same style as service borewell)
       // Starts from the second screen level and ends slightly above the aquifer
@@ -750,106 +700,7 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(serviceCenterX - 8, 320 - 20, 16, 20);
       
-      // Sequential water flow animation - rooftop to desilting pit
-      if (isPlaying) {
-        const totalCycleTime = 20; // Total cycle time for complete flow
-        const cycleTime = (animationTime * 2) % totalCycleTime;
-        
-        // Phase 1: Rooftop to desilting pit (0-5 seconds)
-        if (cycleTime <= 5) {
-          // Animate water flow from rooftop to desilting pit
-          const flowProgress = cycleTime / 5;
-          const startX = rooftop.x + rooftop.width;
-          const startY = rooftop.y + 2;
-          const endX = pit.x;
-          const groundY = 120;
-          
-          // Draw water droplets flowing through the pipe
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
-          const pipeLength = endX - startX;
-          const verticalDrop = groundY - startY;
-          
-          // Vertical drop animation
-          if (flowProgress < 0.3) {
-            const verticalProgress = flowProgress / 0.3;
-            for (let i = 0; i < 4; i++) {
-              const dropletY = startY + (verticalProgress * verticalDrop - i * 8) % verticalDrop;
-              if (dropletY >= startY && dropletY <= groundY) {
-                ctx.beginPath();
-                ctx.arc(startX, dropletY, 2, 0, Math.PI * 2);
-                ctx.fill();
-              }
-            }
-          }
-          
-          // Horizontal flow animation
-          if (flowProgress >= 0.3) {
-            const horizontalProgress = (flowProgress - 0.3) / 0.7;
-            for (let i = 0; i < 6; i++) {
-              const dropletX = startX + (horizontalProgress * pipeLength - i * 15) % pipeLength;
-              if (dropletX >= startX && dropletX <= endX) {
-                ctx.beginPath();
-                ctx.arc(dropletX, groundY, 2, 0, Math.PI * 2);
-                ctx.fill();
-              }
-            }
-          }
-          
-          // Fill desilting pit progressively
-          const pitFillProgress = Math.max(0, (cycleTime - 1) / 4); // Start filling after 1 second
-          const pitWaterLevel = Math.min(pit.height - 10, pitFillProgress * (pit.height - 10));
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
-          ctx.fillRect(pit.x + 5, pit.y + pit.height - pitWaterLevel, pit.width - 10, pitWaterLevel);
-        }
-        
-        ctx.globalAlpha = 1;
-      }
       
-      // Phase 2: Desilting pit to recharge pit/trench/shaft (5-10 seconds)
-      if (isPlaying) {
-        const totalCycleTime = 20;
-        const cycleTime = (animationTime * 2) % totalCycleTime;
-        
-        // Keep desilting pit full after phase 1
-        if (cycleTime > 5) {
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
-          ctx.fillRect(pit.x + 5, pit.y + 5, pit.width - 10, pit.height - 10);
-        }
-        
-        if (cycleTime > 5 && cycleTime <= 10) {
-          // Animate water flow from desilting pit to recharge pit/trench/shaft
-          const flowProgress = (cycleTime - 5) / 5;
-          const startX = pit.x + pit.width;
-          const endX = rechargeWell.x;
-          const groundY = 120;
-          
-          // Draw water droplets flowing through the pipe
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
-          const pipeLength = endX - startX;
-          
-          for (let i = 0; i < 6; i++) {
-            const dropletX = startX + (flowProgress * pipeLength - i * 15) % pipeLength;
-            if (dropletX >= startX && dropletX <= endX) {
-              ctx.beginPath();
-              ctx.arc(dropletX, groundY, 2, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-          
-          // Fill recharge pit/trench/shaft progressively
-          const wellFillProgress = Math.max(0, (cycleTime - 6) / 4); // Start filling after 6 seconds
-          const wellWaterLevel = Math.min(rechargeWell.height - 10, wellFillProgress * (rechargeWell.height - 10));
-          ctx.fillStyle = '#87CEEB';
-          ctx.globalAlpha = 0.8;
-          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + rechargeWell.height - wellWaterLevel, rechargeWell.width - 10, wellWaterLevel);
-        }
-        
-        ctx.globalAlpha = 1;
-      }
       
       // Percolation animation inside borewell removed
       

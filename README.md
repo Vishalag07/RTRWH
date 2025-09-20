@@ -1,479 +1,286 @@
-# 🌧️ RTRWH-AR Assessment Platform
+# RTRWH - Rainwater Harvesting and Groundwater Management System
 
-A comprehensive full-stack application for on-spot assessment of **Rooftop Rainwater Harvesting (RTRWH)** and **Artificial Recharge (AR)** potential with premium UI, smooth animations, and enhanced security.
+A comprehensive web application for rainwater harvesting assessment, groundwater management, and environmental monitoring with 3D visualizations and real-time data integration.
 
-![RTRWH-AR Platform](https://img.shields.io/badge/Platform-RTRWH--AR-blue)
-![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.112.2-009688?logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+## 🌟 Features
 
-## 🚀 Features
+### Core Functionality
+- **Rainwater Harvesting Assessment**: Complete evaluation of rainwater harvesting potential
+- **Groundwater Management**: Real-time groundwater level monitoring and analysis
+- **3D Aquifer Visualization**: Interactive 3D models of groundwater systems
+- **2D Animation System**: Educational animations showing water flow processes
+- **GIS Integration**: Interactive maps with soil type overlays and location-based data
+- **Weather Integration**: NASA Power API integration for weather data
+- **AI Chatbot**: Intelligent assistant for water management guidance
 
-### 🏠 **Assessment & Analysis**
-- **Field Data Capture**: User location, dwellers, rooftop area, open space analysis
-- **GIS Integration**: Real-time rainfall, aquifer, and groundwater depth data
-- **Smart Calculators**: Runoff estimation, structure recommendations, sizing, costs, and benefits
-- **AI-Powered Predictions**: LSTM-based rainfall forecasting with confidence scoring
-
-### 🎨 **Premium User Experience**
-- **3D Visualization**: Interactive aquifer and groundwater depth visualization using Three.js
-- **Responsive Design**: Modern UI with dark/light mode toggle
-- **Smooth Animations**: Framer Motion powered page transitions and micro-interactions
-- **Multi-language Support**: 11 Indian languages including Hindi, Bengali, Gujarati, Tamil, Telugu, and more
-
-### 📊 **Advanced Analytics**
-- **Real-time Charts**: Interactive data visualization with Recharts
-- **PDF Reports**: Downloadable assessment reports with detailed analysis
-- **Gamification**: Points, badges, and leaderboard system
-- **AI Chat Assistant**: OpenAI-powered chat for user guidance
-
-### 🔒 **Enterprise Security**
-- **JWT Authentication**: Secure user authentication and authorization
-- **Rate Limiting**: API request throttling and abuse prevention
-- **Security Headers**: CORS, CSP, HSTS, and other security measures
-- **Data Validation**: Comprehensive input validation with Pydantic
-
-## 🛠️ Tech Stack
-
-### **Frontend**
-- **React 18.3.1** with TypeScript - Modern UI framework
-- **Vite 5.4.3** - Lightning-fast build tool
-- **TailwindCSS 3.4.10** - Utility-first styling
-- **Three.js 0.153.0** - 3D graphics and visualization
-- **Framer Motion 11.0.17** - Advanced animations
-- **Leaflet 1.9.4** - Interactive maps
-- **Recharts 2.12.7** - Data visualization
-- **i18next 25.4.1** - Internationalization
-
-### **Backend**
-- **FastAPI 0.112.2** - Modern Python web framework
-- **SQLAlchemy 2.0.35** - Database ORM
-- **PostgreSQL 16** with **PostGIS** - Spatial database
-- **Pydantic 2.9.0** - Data validation
-- **JWT Authentication** - Secure user management
-- **Scikit-learn 1.3.0** - Machine learning algorithms
-
-### **DevOps & Infrastructure**
-- **Docker & Docker Compose** - Containerization
-- **Multi-stage builds** - Optimized production images
-- **Health checks** - Service monitoring
-- **Volume persistence** - Data durability
+### Technical Features
+- **Real-time Data**: Live groundwater data from multiple sources
+- **Multi-language Support**: Support for 10+ Indian languages
+- **Responsive Design**: Mobile-first responsive interface
+- **Progressive Web App**: PWA capabilities for offline usage
+- **Voice Assistant**: Voice-controlled interface
+- **Gamification**: Achievement system and progress tracking
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.11+** (recommended) or Python 3.13
-- **Node.js 18+** and npm
-- **Docker and Docker Compose** (optional, for containerized deployment)
-- **Git**
+- Docker and Docker Compose
+- Node.js 20+ (for local development)
+- Python 3.11+ (for local development)
+- PostgreSQL with PostGIS extension
 
-### Option 1: Docker Deployment (Recommended)
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd RTRWH
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start with Docker Compose (Recommended)**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+### Local Development Setup
+
+#### Backend Setup
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd RTRWH
-
-# 2. Environment setup
-cp .env.example .env
-# Edit .env with your configuration
-
-# 3. Start all services
-docker compose up -d --build
-
-# 4. View logs
-docker compose logs -f
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Option 2: Local Development Setup
+#### Frontend Setup
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd RTRWH
-
-# 2. Backend setup
-cd backend
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-
-# 3. Frontend setup
-cd ../frontend
-npm install
-
-# 4. Start backend (in one terminal)
-cd backend
-.venv\Scripts\uvicorn.exe app.main:app --reload --host 0.0.0.0 --port 8000
-
-# 5. Start frontend (in another terminal)
 cd frontend
+npm install
 npm run dev
 ```
 
-### 4. Access the Application
-- **Frontend**: http://localhost:3000 (Docker) or http://localhost:5173 (Local)
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **Database**: localhost:5432 (Docker only)
+## 🏗️ Architecture
+
+### Backend (FastAPI)
+- **Framework**: FastAPI with Python 3.11
+- **Database**: PostgreSQL with PostGIS
+- **Authentication**: JWT-based authentication
+- **API**: RESTful API with automatic documentation
+- **External APIs**: NASA Power, CGWB, OpenAI
+
+### Frontend (React + TypeScript)
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **3D Graphics**: Three.js with React Three Fiber
+- **Maps**: Leaflet with React Leaflet
+- **State Management**: Zustand
+- **Animation**: Framer Motion
+
+### Database Schema
+- **Users**: Authentication and user management
+- **Assessments**: Rainwater harvesting assessments
+- **Groundwater Data**: Real-time groundwater monitoring
+- **Soil Data**: Soil type and property information
+- **Weather Data**: Historical and forecast weather data
 
 ## 📁 Project Structure
 
 ```
 RTRWH/
-├── frontend/                 # React frontend application
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/          # Route-based pages
-│   │   ├── services/       # API clients and services
-│   │   ├── contexts/       # React context providers
-│   │   ├── hooks/          # Custom React hooks
-│   │   └── locales/        # Internationalization files
-│   ├── public/             # Static assets
-│   └── package.json        # Frontend dependencies
-├── backend/                 # FastAPI backend application
+├── backend/                 # FastAPI backend
 │   ├── app/
-│   │   ├── routers/        # API endpoint definitions
-│   │   ├── services/       # Business logic and algorithms
+│   │   ├── main.py         # FastAPI application
 │   │   ├── models.py       # Database models
-│   │   ├── schemas.py      # Data validation schemas
-│   │   ├── middleware/     # Custom middleware
-│   │   └── security.py     # Authentication logic
-│   ├── requirements.txt    # Backend dependencies
-│   └── Dockerfile         # Backend container config
-├── docker-compose.yml      # Multi-container orchestration
-└── README.md              # This file
+│   │   ├── schemas.py      # Pydantic schemas
+│   │   ├── routers/        # API routes
+│   │   ├── services/       # Business logic
+│   │   └── middleware/     # Custom middleware
+│   ├── requirements.txt    # Python dependencies
+│   └── Dockerfile         # Backend container
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── pages/         # Page components
+│   │   ├── services/      # API services
+│   │   ├── hooks/         # Custom hooks
+│   │   └── utils/         # Utility functions
+│   ├── package.json       # Node.js dependencies
+│   └── Dockerfile         # Frontend container
+├── docker-compose.yml     # Multi-container setup
+├── .env.example          # Environment variables template
+└── README.md             # This file
 ```
 
-## 🧮 Key Algorithms
+## 🔧 Configuration
 
-### **Rainfall Prediction**
-- **LSTM Neural Network** with 24-hour sequence input
-- **Feature Engineering**: Temperature, humidity, pressure, wind, cloud cover
-- **Confidence Scoring**: Weather pattern analysis
-- **Fallback System**: Rule-based prediction when ML model unavailable
+### Environment Variables
 
-### **Hydrological Calculations**
-```python
-# Runoff estimation
-runoff_liters = annual_rainfall_mm × roof_area_m2 × runoff_coefficient
+Key environment variables (see `.env.example` for complete list):
 
-# Structure recommendation algorithm
-if groundwater_depth < 5m and open_space >= 20m²: recommend "trench"
-elif roof_area < 120m²: recommend "pit"
-elif roof_area >= 300m² and depth >= 10m: recommend "recharge_well"
-else: recommend "shaft"
-```
-
-### **3D Visualization**
-- **Real-time Water Animation**: Sine wave-based surface simulation
-- **Performance Optimization**: LOD system, frustum culling, material optimization
-- **Interactive Elements**: Hover effects, selection highlighting, tooltips
-
-### **Cost-Benefit Analysis**
-```python
-# Economic calculations
-capex = base_cost + (per_liter_cost × storage_liters / 1000)
-opex = 0.02 × capex  # 2% annual maintenance
-payback_years = capex / (water_savings_liters_per_year / 1000)
-```
-
-## 🔧 Development
-
-### **Frontend Development**
 ```bash
-cd frontend
-npm install
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run test         # Run tests
-npm run preview      # Preview production build
+# Database
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=rtrwh
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rtrwh
+
+# Backend
+SECRET_KEY=your-secret-key-here
+API_V1_STR=/api/v1
+DEBUG=true
+
+# Frontend
+VITE_API_BASE=http://localhost:8000/api
+VITE_APP_NAME=RTRWH
+
+# External APIs (Optional)
+OPENAI_API_KEY=your-openai-api-key
+NASA_POWER_API_KEY=your-nasa-power-api-key
 ```
 
-### **Backend Development**
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+### Docker Configuration
 
-### **Database Management**
-```bash
-# Run migrations
-docker compose exec backend alembic upgrade head
+The application uses Docker Compose for orchestration:
 
-# Create new migration
-docker compose exec backend alembic revision --autogenerate -m "Description"
-```
+- **Database**: PostgreSQL with PostGIS
+- **Backend**: FastAPI with Python 3.11
+- **Frontend**: React with Node.js 20
+- **Networking**: Custom bridge network
+- **Volumes**: Persistent data storage
+- **Health Checks**: Automatic service health monitoring
 
 ## 🧪 Testing
 
-### **Run Test Suite**
+### Backend Tests
 ```bash
-# Test the complete application
-pip install requests colorama
-python test_app.py
-
-# Frontend tests
-cd frontend && npm test
-
-# Backend tests
-cd backend && python -m pytest
+cd backend
+pytest
 ```
 
-### **Test Coverage**
-- ✅ Backend connectivity
-- ✅ CORS configuration
-- ✅ Security headers
-- ✅ Rate limiting
-- ✅ Authentication flow
-- ✅ API endpoints
-- ✅ Frontend components
-
-## 🔧 Troubleshooting
-
-### **Common Issues & Solutions**
-
-#### **Python 3.13 Compatibility Issues**
+### Frontend Tests
 ```bash
-# Error: numpy==1.24.3 not compatible with Python 3.13
-# Solution: Updated requirements.txt with compatible versions
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-```
-
-#### **Backend Import Errors**
-```bash
-# Error: Cannot import 'setuptools.build_meta'
-# Solution: Upgrade build tools
-pip install --upgrade pip setuptools wheel
-
-# Error: ModuleNotFoundError for numpy/pandas
-# Solution: Install with compatible versions
-pip install "numpy>=1.26.0" "pandas>=2.1.0"
-```
-
-#### **Frontend Build Issues**
-```bash
-# Error: Node modules not found
-# Solution: Clean install
 cd frontend
-rm -rf node_modules package-lock.json
-npm install
-
-# Error: Vite build fails
-# Solution: Check Node.js version (requires 18+)
-node --version
-npm --version
-
-# Error: Dynamic import failed - port mismatch
-# Solution: Clear cache and restart
-cd frontend
-Remove-Item -Recurse -Force dist, node_modules\.vite -ErrorAction SilentlyContinue
-npm run dev
-
-# Error: Port 3000 conflicts with Vite (uses 5173)
-# Solution: Kill conflicting processes
-netstat -ano | findstr :3000
-taskkill /F /PID <PID_NUMBER>
+npm test
 ```
 
-#### **Docker Build Issues**
+### Integration Tests
 ```bash
-# Error: pip install timeout during Docker build
-# Solution: Use optimized Dockerfile with retry logic
-docker build --no-cache -t rtrwh-backend ./backend
-
-# Error: Network timeout downloading packages
-# Solution: Increase timeout and use retry logic
-export PIP_TIMEOUT=300
-export PIP_DEFAULT_TIMEOUT=300
-docker compose build --no-cache
-
-# Error: Build context too large
-# Solution: Use .dockerignore to reduce context
-# Check .dockerignore file exists in backend/
-
-# Error: Multi-stage build fails
-# Solution: Build with verbose output
-docker build --progress=plain -t rtrwh-backend ./backend
+docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
-#### **Database Connection Issues**
-```bash
-# Error: PostgreSQL connection failed
-# Solution: Check Docker services
-docker compose ps
-docker compose logs db
+## 📊 API Documentation
 
-# Error: Database not found
-# Solution: Initialize database
-docker compose exec backend alembic upgrade head
-```
+The API documentation is automatically generated and available at:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
-#### **Port Conflicts**
-```bash
-# Error: Port 8000 already in use
-# Solution: Use different port
-uvicorn app.main:app --reload --port 8001
+### Key API Endpoints
 
-# Error: Port 3000 already in use
-# Solution: Use different port
-npm run dev -- --port 3001
-```
-
-#### **API Connection Issues**
-```bash
-# Error: CORS policy blocks requests
-# Solution: Check allowed origins in settings.py
-# Update ALLOWED_ORIGINS with your frontend URL
-
-# Error: Rate limit exceeded
-# Solution: Wait or increase limits in settings.py
-# Set RATE_LIMIT_REQUESTS to higher value
-```
-
-## 🌐 API Documentation
-
-### **Core Endpoints**
-- `POST /api/assessments` - Create new assessment
-- `GET /api/assessments` - List user assessments
-- `GET /api/assessments/{id}` - Get specific assessment
-- `POST /api/auth/login` - User authentication
-- `GET /api/rain-prediction` - Rainfall forecasting
-- `GET /api/gis/rainfall` - Historical rainfall data
-- `GET /api/aquifer` - Aquifer information
-
-### **Interactive Documentation**
-Visit http://localhost:8000/docs for complete API documentation with interactive testing.
-
-## 🔐 Security Features
-
-- **JWT Authentication** with configurable expiration
-- **Rate Limiting** (100 requests/minute per IP)
-- **CORS Protection** with configurable origins
-- **Security Headers** (CSP, HSTS, X-Frame-Options)
-- **Input Validation** with Pydantic schemas
-- **SQL Injection Protection** via SQLAlchemy ORM
-- **Password Hashing** with bcrypt
-
-## 🌍 Internationalization
-
-Supported languages:
-- **Hindi** (हिन्दी)
-- **Bengali** (বাংলা)
-- **Gujarati** (ગુજરાતી)
-- **Kannada** (ಕನ್ನಡ)
-- **Malayalam** (മലയാളം)
-- **Marathi** (मराठी)
-- **Odia** (ଓଡ଼ିଆ)
-- **Punjabi** (ਪੰਜਾਬੀ)
-- **Tamil** (தமிழ்)
-- **Telugu** (తెలుగు)
-- **English** (Default)
-
-## 📊 Performance Optimization
-
-### **Frontend**
-- **Code Splitting** with lazy loading
-- **Bundle Optimization** with vendor chunking
-- **Asset Compression** (Brotli + Gzip)
-- **3D Performance Modes** for low-end devices
-- **Image Optimization** and lazy loading
-
-### **Backend**
-- **Database Indexing** for spatial queries
-- **Connection Pooling** for PostgreSQL
-- **Async/Await** for non-blocking operations
-- **Caching Strategies** for external API calls
-- **Response Compression** for large datasets
+- `GET /api/v1/groundwater/info` - Get groundwater data
+- `POST /api/v1/assessments/` - Create new assessment
+- `GET /api/v1/weather/current` - Get current weather
+- `POST /api/v1/auth/login` - User authentication
+- `GET /api/v1/soil/types` - Get soil type data
 
 ## 🚀 Deployment
 
-### **Production Deployment**
-```bash
-# Build production images
-docker compose -f docker-compose.prod.yml build
+### Production Deployment
 
-# Deploy to production
-docker compose -f docker-compose.prod.yml up -d
-```
+1. **Update environment variables for production**
+2. **Build and deploy with Docker**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
 
-### **Environment Variables**
-```bash
-# Database
-POSTGRES_USER=your_username
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=rtrwh
+3. **Set up reverse proxy (Nginx)**
+4. **Configure SSL certificates**
+5. **Set up monitoring and logging**
 
-# API Keys
-OPENAI_API_KEY=your_openai_key
-GOOGLE_MAPS_API_KEY=your_google_maps_key
-OPENWEATHER_API_KEY=your_openweather_key
+### Cloud Deployment
 
-# Security
-SECRET_KEY=your_secret_key
-ALLOWED_ORIGINS=https://yourdomain.com
-```
+The application is designed to be cloud-ready and can be deployed on:
+- AWS (ECS, EKS, EC2)
+- Google Cloud Platform (GKE, Cloud Run)
+- Azure (Container Instances, AKS)
+- DigitalOcean (App Platform, Droplets)
+
+## 🔒 Security
+
+- **Authentication**: JWT-based authentication
+- **Authorization**: Role-based access control
+- **CORS**: Configurable CORS policies
+- **Rate Limiting**: API rate limiting
+- **Input Validation**: Comprehensive input validation
+- **SQL Injection Protection**: SQLAlchemy ORM protection
+- **XSS Protection**: React's built-in XSS protection
+
+## 📈 Performance
+
+- **Frontend**: Code splitting and lazy loading
+- **Backend**: Async/await for I/O operations
+- **Database**: Optimized queries and indexing
+- **Caching**: Redis caching (optional)
+- **CDN**: Static asset delivery
+- **Compression**: Gzip compression
 
 ## 🤝 Contributing
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
-### **Development Guidelines**
-- Follow TypeScript best practices
+### Development Guidelines
+
+- Follow PEP 8 for Python code
+- Use TypeScript for all frontend code
 - Write comprehensive tests
 - Update documentation
-- Follow conventional commit messages
-- Ensure responsive design
-- Test across multiple browsers
+- Follow semantic versioning
 
-## 📄 License
+## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Check the documentation
+- Contact the development team
+
+## 🔄 Changelog
+
+### Version 1.0.0
+- Initial release
+- Core rainwater harvesting assessment
+- 3D groundwater visualization
+- Real-time data integration
+- Multi-language support
+- PWA capabilities
 
 ## 🙏 Acknowledgments
 
-- **NASA POWER API** for weather and soil data
-- **OpenWeather** for meteorological data
-- **PostGIS** for spatial database capabilities
-- **Three.js** community for 3D graphics
-- **React** and **FastAPI** communities for excellent frameworks
-
-## 📞 Support
-
-- **Documentation**: [Project Wiki](link-to-wiki)
-- **Issues**: [GitHub Issues](link-to-issues)
-- **Discussions**: [GitHub Discussions](link-to-discussions)
-- **Email**: support@rtrwh-platform.com
-
-## 🔮 Roadmap
-
-### **Upcoming Features**
-- [ ] **Mobile App** (React Native)
-- [ ] **Advanced ML Models** for better predictions
-- [ ] **Real-time Monitoring** with IoT integration
-- [ ] **Blockchain Integration** for data integrity
-- [ ] **AR/VR Visualization** for immersive experience
-- [ ] **Community Features** for knowledge sharing
-
-### **Performance Improvements**
-- [ ] **Edge Computing** for faster response times
-- [ ] **CDN Integration** for global content delivery
-- [ ] **Advanced Caching** strategies
-- [ ] **Database Sharding** for scalability
+- NASA Power API for weather data
+- Central Ground Water Board (CGWB) for groundwater data
+- OpenStreetMap for mapping data
+- Three.js community for 3D graphics
+- React and FastAPI communities
 
 ---
 
-<div align="center">
-
 **Built with ❤️ for sustainable water management**
-
-[🌐 Website](https://rtrwh-platform.com) • [📚 Documentation](https://docs.rtrwh-platform.com) • [🐛 Report Bug](https://github.com/your-org/RTRWH/issues) • [💡 Request Feature](https://github.com/your-org/RTRWH/issues)
-
-</div>
