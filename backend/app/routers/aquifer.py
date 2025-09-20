@@ -110,6 +110,72 @@ async def create_aquifer_data(
         return _get_mock_aquifer_data(28.6139, 77.2090)
 
 
+@router.get("/aquifer-depth")
+async def get_aquifer_depth(
+    lat: float,
+    lon: float,
+    db: Session = Depends(get_db)
+):
+    """
+    Get aquifer depth for a specific location
+    """
+    try:
+        # Generate mock aquifer depth based on location
+        mock_aquifer = _get_mock_aquifer_data(lat, lon)
+        
+        return {
+            "depth_m": mock_aquifer.gw_depth_m,
+            "aquifer_type": mock_aquifer.aquifer_type,
+            "location": {
+                "latitude": lat,
+                "longitude": lon
+            },
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching aquifer depth: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching aquifer depth")
+
+
+@router.get("/info")
+async def get_groundwater_info(
+    lat: float,
+    lon: float
+):
+    """
+    Fetch groundwater and aquifer info for a given lat/lon (mocked for MVP)
+    """
+    # Mock dataset keyed by (lat, lon)
+    mock_data = {
+        (12.9716, 77.5946): {
+            "location": "Bengaluru Urban",
+            "groundwater_level_m": 12.5,
+            "aquifer_type": "Unconfined Aquifer",
+            "borewells_connected": 154,
+            "last_updated": "2025-09-01"
+        },
+        (28.6139, 77.2090): {
+            "location": "New Delhi",
+            "groundwater_level_m": 22.1,
+            "aquifer_type": "Confined Aquifer",
+            "borewells_connected": 320,
+            "last_updated": "2025-08-20"
+        },
+    }
+    key = (round(lat, 4), round(lon, 4))
+    data = mock_data.get(key)
+    if not data:
+        data = {
+            "location": "Unknown",
+            "groundwater_level_m": 18.2,
+            "aquifer_type": "Confined Aquifer",
+            "borewells_connected": 75,
+            "last_updated": "2025-09-20"
+        }
+    return data
+
+
 @router.get("/{aquifer_id}", response_model=AquiferDataOut)
 async def get_aquifer_data_by_id(
     aquifer_id: int,

@@ -43,8 +43,8 @@ export function Results() {
   }
 
   useEffect(() => {
-    if (!id) {
-      // Show sample data when no ID is provided
+    if (!id || id === 'undefined') {
+      // Show sample data when no ID is provided or ID is undefined
       const sampleData = {
         id: 'sample',
         created_at: new Date().toISOString(),
@@ -110,7 +110,13 @@ export function Results() {
     if (isAI) setDownloadingAI(true); else setDownloadingGuide(true);
 
     try {
+      console.log(`Downloading PDF: /reports/${id}/${type}.pdf`);
       const res = await api.get(`/reports/${id}/${type}.pdf`, { responseType: 'blob' });
+      
+      if (!res.data || res.data.size === 0) {
+        throw new Error('PDF file is empty or corrupted');
+      }
+      
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -120,8 +126,13 @@ export function Results() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      
+      console.log(`PDF downloaded successfully: assessment_${id}_${type}.pdf`);
     } catch (e: any) {
-      alert(e.response?.data?.detail || t(isAI ? 'results.error_download_ai' : 'results.error_download_guide'));
+      console.error('PDF download error:', e);
+      const errorMessage = e.response?.data?.detail || e.message || 
+        (isAI ? 'Failed to download AI report' : 'Failed to download guide');
+      alert(`Error: ${errorMessage}`);
     } finally {
       if (isAI) setDownloadingAI(false); else setDownloadingGuide(false);
     }
@@ -137,6 +148,21 @@ export function Results() {
 
   if (error) return <div className="p-6 max-w-5xl mx-auto text-red-600">{error}</div>;
   if (!data) return <div className="p-6 max-w-5xl mx-auto">{t('results.loading')}</div>;
+
+  // Ensure data.results exists and has the required properties
+  if (!data.results || !data.results.runoff || !data.results.structure) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Invalid Assessment Data</h2>
+          <p className="text-gray-600 mb-4">The assessment data is incomplete or corrupted.</p>
+          <Link to="/assess" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Start New Assessment
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const chartData = [
     { name: t('results.chart_runoff'), runoff: Math.round(data.results.runoff.annual_runoff_volume_liters), storage: null },
@@ -344,6 +370,9 @@ export function Results() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/dashboard" className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+              Back to Dashboard
+            </Link>
             <Link to="/assess" className="px-4 py-2 rounded-lg border border-blue-300 text-blue-600 hover:bg-blue-50 font-medium transition-colors">
               {t('results.new_assessment_button')}
             </Link>

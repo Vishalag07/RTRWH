@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rtrwh-cache-v2';
+const CACHE_NAME = 'rtrwh-cache-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -29,14 +29,29 @@ self.addEventListener('fetch', (event) => {
         return await fetch(event.request);
       }
 
-      // Try cache first, then network
+      // Don't cache module scripts or JS files in development
+      const url = new URL(event.request.url);
+      const isModuleScript = url.pathname.includes('/src/') || 
+                            url.pathname.endsWith('.js') || 
+                            url.pathname.endsWith('.ts') || 
+                            url.pathname.endsWith('.tsx') ||
+                            event.request.headers.get('accept')?.includes('text/javascript');
+
+      if (isModuleScript) {
+        // Always fetch module scripts fresh to avoid MIME type issues
+        return await fetch(event.request);
+      }
+
+      // Try cache first, then network for other resources
       const cached = await caches.match(event.request);
       if (cached) return cached;
 
       const response = await fetch(event.request);
-      // Optionally cache successful same-origin responses
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(event.request, response.clone());
+      // Only cache successful responses that aren't module scripts
+      if (response.ok && !isModuleScript) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, response.clone());
+      }
       return response;
     } catch (err) {
       // On failure, if it's a navigation request, serve the shell

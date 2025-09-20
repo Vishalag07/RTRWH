@@ -34,6 +34,7 @@ class UserCreate(BaseModel):
 	email: EmailStr
 	name: constr(min_length=1, strip_whitespace=True)
 	password: constr(min_length=8)
+	location: Optional[str] = None
 
 
 class UserOut(BaseModel):

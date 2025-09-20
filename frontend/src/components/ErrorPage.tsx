@@ -4,7 +4,51 @@ import { motion } from 'framer-motion';
 
 function ErrorPage() {
   const error = useRouteError();
-  console.error(error);
+  console.error('ErrorPage - Full error details:', error);
+  
+  // Extract more detailed error information
+  const getErrorDetails = () => {
+    if (isRouteErrorResponse(error)) {
+      return {
+        type: 'Route Error',
+        status: error.status,
+        statusText: error.statusText,
+        message: error.data?.message || 'Route error occurred',
+        data: error.data
+      };
+    }
+    
+    if (error instanceof Error) {
+      return {
+        type: 'JavaScript Error',
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      };
+    }
+    
+    // Handle React errors (including minified ones)
+    if (typeof error === 'string') {
+      return {
+        type: 'String Error',
+        message: error
+      };
+    }
+    
+    if (typeof error === 'object' && error !== null) {
+      return {
+        type: 'Object Error',
+        message: JSON.stringify(error, null, 2)
+      };
+    }
+    
+    return {
+      type: 'Unknown Error',
+      message: String(error)
+    };
+  };
+  
+  const errorDetails = getErrorDetails();
 
   return (
     <motion.div
@@ -36,19 +80,32 @@ function ErrorPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          {isRouteErrorResponse(error) ? `${error.status} - ${error.statusText}` : 'Unexpected Error'}
+          {errorDetails.type}
         </motion.h1>
         
         <motion.p 
-          className="text-gray-600 text-center mb-6"
+          className="text-gray-600 text-center mb-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          {isRouteErrorResponse(error) 
-            ? error.data?.message || 'Something went wrong with this route.'
-            : (error as Error)?.message || 'An unexpected error occurred.'}
+          {errorDetails.message}
         </motion.p>
+        
+        {/* Show additional error details in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <motion.div 
+            className="bg-gray-100 rounded-lg p-4 mb-6 text-left"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            <h3 className="font-semibold text-gray-800 mb-2">Debug Information:</h3>
+            <pre className="text-xs text-gray-600 overflow-auto max-h-40">
+              {JSON.stringify(errorDetails, null, 2)}
+            </pre>
+          </motion.div>
+        )}
         
         <motion.div
           className="flex justify-center"

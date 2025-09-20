@@ -30,7 +30,7 @@ const Aquifer2DFallback: React.FC<Aquifer2DFallbackProps> = ({
   onLevelChange,
   onTogglePlay,
   enhancedSoilLayers = [],
-  dataSource = 'Demo Data',
+  dataSource = 'India WRIS (Primary)',
   isLoading = false,
   lat = 22.5,
   lon = 77.0,

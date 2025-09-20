@@ -6,6 +6,7 @@ import DashboardLayout from './components/DashboardLayout';
 import { ThemeProvider } from './components/ThemeProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorPage from './components/ErrorPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import './services/i18n';
 import './styles.css';
 
@@ -76,10 +77,12 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

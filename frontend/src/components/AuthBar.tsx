@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, setAuth } from '../services/api';
-import { FiEye } from 'react-icons/fi';
+import { FiEye, FiMapPin, FiLoader } from 'react-icons/fi';
+import { getCurrentLocation, getLocationErrorText, GeolocationError } from '../utils/geolocation';
 
 interface AuthBarProps {
   email: string;
@@ -11,6 +12,8 @@ interface AuthBarProps {
   setPassword: (password: string) => void;
   name: string;
   setName: (name: string) => void;
+  location: string;
+  setLocation: (location: string) => void;
   mode: 'login' | 'register';
   setMode: (mode: 'login' | 'register') => void;
   login: () => void;
@@ -19,11 +22,12 @@ interface AuthBarProps {
   message: { type: 'error' | 'success'; text: string } | null;
 }
 
-export function AuthBar({ email, setEmail, password, setPassword, name, setName, mode, setMode, login, register, submitting, message }: AuthBarProps) {
+export function AuthBar({ email, setEmail, password, setPassword, name, setName, location, setLocation, mode, setMode, login, register, submitting, message }: AuthBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [showPassword, setShowPassword] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
   useEffect(() => { setAuth(token) }, [token]);
 
@@ -35,6 +39,20 @@ export function AuthBar({ email, setEmail, password, setPassword, name, setName,
   function logout() {
     localStorage.removeItem('token');
     setToken(null);
+  }
+
+  async function handleFetchLocation() {
+    setIsFetchingLocation(true);
+    try {
+      const locationData = await getCurrentLocation();
+      setLocation(locationData.city);
+    } catch (error) {
+      const errorMessage = getLocationErrorText(error as GeolocationError);
+      // You could show a toast or error message here
+      console.error('Location fetch error:', errorMessage);
+    } finally {
+      setIsFetchingLocation(false);
+    }
   }
 
   if (token) {
@@ -111,6 +129,36 @@ export function AuthBar({ email, setEmail, password, setPassword, name, setName,
                 {name && !nameValid && (
                   <p className="mt-1 text-xs text-red-600">{t('auth.name_required')}</p>
                 )}
+              </div>
+            )}
+
+            {mode === 'register' && (
+              <div className="sm:col-span-2">
+                <label className="block text-sm text-slate-700 mb-1" htmlFor="location">City</label>
+                <div className="relative">
+                  <input
+                    id="location"
+                    className="w-full rounded-lg border px-3 py-2 pr-12 outline-none transition focus:ring-2 focus:ring-blue-500 border-slate-300"
+                    placeholder="Enter your city"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    aria-label="City"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleFetchLocation}
+                    disabled={isFetchingLocation}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Auto-fetch location"
+                  >
+                    {isFetchingLocation ? (
+                      <FiLoader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FiMapPin className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Optional: Click the location icon to auto-detect your city</p>
               </div>
             )}
 

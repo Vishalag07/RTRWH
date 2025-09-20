@@ -12,6 +12,7 @@ export function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -35,12 +36,12 @@ export function Auth() {
     setSubmitting(true);
     setMessage(null);
     try {
-      const success = await authRegister(name.trim(), email.trim(), password);
-      if (success) {
+      const result = await authRegister(name.trim(), email.trim(), password, location.trim());
+      if (result.success) {
         setMessage({ type: 'success', text: t('auth.register_success') });
         setMode('login');
       } else {
-        setMessage({ type: 'error', text: t('auth.register_failed') });
+        setMessage({ type: 'error', text: result.error || t('auth.register_failed') });
       }
     } catch (e: any) {
       setMessage({ type: 'error', text: t('auth.register_failed') });
@@ -53,13 +54,13 @@ export function Auth() {
     setSubmitting(true);
     setMessage(null);
     try {
-      const success = await authLogin(email.trim(), password);
-      if (success) {
+      const result = await authLogin(email.trim(), password);
+      if (result.success) {
         setMessage({ type: 'success', text: t('auth.login_success') });
         // Redirect to dashboard after successful login
         navigate('/dashboard');
       } else {
-        setMessage({ type: 'error', text: t('auth.login_failed') });
+        setMessage({ type: 'error', text: result.error || t('auth.login_failed') });
       }
     } catch (e: any) {
       setMessage({ type: 'error', text: t('auth.login_failed') });
@@ -99,6 +100,7 @@ export function Auth() {
               email={email} setEmail={setEmail} 
               password={password} setPassword={setPassword} 
               name={name} setName={setName} 
+              location={location} setLocation={setLocation}
               mode={mode} setMode={(newMode) => { setMode(newMode); setMessage(null); }} 
               login={login} register={register} 
               submitting={submitting} message={message} 

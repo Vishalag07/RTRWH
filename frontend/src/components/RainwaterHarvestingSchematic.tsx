@@ -32,7 +32,7 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
   isPlaying,
   onLevelChange,
   onTogglePlay,
-  dataSource = 'Demo Data',
+  dataSource = 'India WRIS (Primary)',
   isLoading = false,
   groundwaterDepth = 12,
   lat = 22.5,
@@ -104,6 +104,145 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
     aquifer: { x: 0, y: 320, width: 800, height: 60 }
   };
 
+  // Canvas setup effect
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const setupCanvas = () => {
+      // Set canvas size with high DPI
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+    };
+
+    setupCanvas();
+
+    // Handle window resize
+    const handleResize = () => {
+      setupCanvas();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Basic components drawing function
+  const drawBasicComponents = (ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) => {
+    // Draw rooftop building
+    const rooftop = componentPositions.rooftop;
+    ctx.fillStyle = '#9CA3AF';
+    ctx.fillRect(rooftop.x, rooftop.y, rooftop.width, rooftop.height);
+    
+    // Draw roof
+    ctx.fillStyle = '#4B5563';
+    ctx.fillRect(rooftop.x - 5, rooftop.y - 10, rooftop.width + 10, 10);
+    
+    // Draw desilting pit
+    const pit = componentPositions.desiltingPit;
+    ctx.fillStyle = '#A9A9A9';
+    ctx.fillRect(pit.x, pit.y, pit.width, pit.height);
+    
+    // Draw borewell
+    const borewell = componentPositions.borewell;
+    ctx.fillStyle = '#6B7280';
+    ctx.fillRect(borewell.x, borewell.y, borewell.width, borewell.height);
+    
+    // Draw service borewell
+    const serviceBorewell = componentPositions.serviceBorewell;
+    ctx.fillStyle = '#4B5563';
+    ctx.fillRect(serviceBorewell.x, serviceBorewell.y, serviceBorewell.width, serviceBorewell.height);
+    
+    // Draw basic pipes
+    ctx.strokeStyle = '#6B7280';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    
+    // Pipe from rooftop to pit
+    ctx.beginPath();
+    ctx.moveTo(rooftop.x + rooftop.width, rooftop.y + 2);
+    ctx.lineTo(rooftop.x + rooftop.width, 120);
+    ctx.lineTo(pit.x, 120);
+    ctx.stroke();
+    
+    // Pipe from pit to borewell
+    ctx.beginPath();
+    ctx.moveTo(pit.x + pit.width, 120);
+    ctx.lineTo(borewell.x, 120);
+    ctx.stroke();
+    
+    // Pipe from borewell to service borewell
+    ctx.beginPath();
+    ctx.moveTo(borewell.x + borewell.width, 120);
+    ctx.lineTo(serviceBorewell.x, 120);
+    ctx.stroke();
+    
+    // Add labels
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText('Rooftop', rooftop.x, rooftop.y - 5);
+    ctx.fillText('Desilting Pit', pit.x, pit.y - 5);
+    ctx.fillText('Recharge Well', borewell.x, borewell.y - 5);
+    ctx.fillText('Service Well', serviceBorewell.x, serviceBorewell.y - 5);
+  };
+
+  // Static render function
+  const renderStatic = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const canvasWidth = canvas.offsetWidth;
+    const canvasHeight = canvas.offsetHeight;
+    
+    // Draw sky background
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, 120);
+    skyGradient.addColorStop(0, '#87CEEB');
+    skyGradient.addColorStop(1, '#B0E0E6');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvasWidth, 120);
+    
+    // Draw soil layers (extend up to ground, remove green surface band)
+    const soilGradient = ctx.createLinearGradient(0, 120, 0, 320);
+    soilGradient.addColorStop(0, '#8B4513');
+    soilGradient.addColorStop(0.5, '#A0522D');
+    soilGradient.addColorStop(1, '#654321');
+    ctx.fillStyle = soilGradient;
+    ctx.fillRect(0, 120, canvasWidth, 200);
+    
+    // Draw aquifer at bottom
+    const aquiferGradient = ctx.createLinearGradient(0, 320, 0, 380);
+    aquiferGradient.addColorStop(0, '#4A90E2');
+    aquiferGradient.addColorStop(1, '#2E5BBA');
+    ctx.fillStyle = aquiferGradient;
+    ctx.fillRect(0, 320, canvasWidth, 60);
+    
+    // Draw water level in aquifer
+    const waterY = 320 + (60 * (1 - waterLevel / 20)); // Scale water level to aquifer height
+    ctx.fillStyle = 'rgba(135, 206, 235, 0.8)';
+    ctx.fillRect(0, waterY, canvasWidth, 380 - waterY);
+    
+    // Draw basic components (simplified for static render)
+    drawBasicComponents(ctx, canvasWidth, canvasHeight);
+  };
+
+  // Static render effect
+  useEffect(() => {
+    renderStatic();
+  }, [waterLevel, soilType, soilColor, aquiferName]);
+
   // Animation loop
   useEffect(() => {
     if (!isPlaying) return;
@@ -117,14 +256,6 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
     const animate = () => {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Set canvas size with high DPI
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
-      ctx.scale(dpr, dpr);
-      canvas.style.width = canvas.offsetWidth + 'px';
-      canvas.style.height = canvas.offsetHeight + 'px';
       
       const canvasWidth = canvas.offsetWidth;
       const canvasHeight = canvas.offsetHeight;
@@ -905,7 +1036,7 @@ const RainwaterHarvestingSchematic: React.FC<RainwaterHarvestingSchematicProps> 
         ref={canvasRef}
         className="w-full h-full cursor-pointer"
         onClick={handleCanvasClick}
-        style={{ imageRendering: 'pixelated' }}
+        style={{ imageRendering: 'auto' }}
       />
       
       {/* Control Panel */}

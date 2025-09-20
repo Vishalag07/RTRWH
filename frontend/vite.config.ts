@@ -22,7 +22,8 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    port: 5173,
+    port: 3000,
+    strictPort: false,
     proxy: {
       '/api': {
         target: process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'http://backend:8000',

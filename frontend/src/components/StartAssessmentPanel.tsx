@@ -83,10 +83,12 @@ const StartAssessmentPanel: React.FC<StartAssessmentPanelProps> = ({ className =
               if (list.length > 0 && list[0]?.id != null) {
                 navigate(`/results/${list[0].id}`);
               } else {
-                navigate('/results');
+                // No assessments found, navigate to assessment page instead
+                navigate('/assess');
               }
             } catch (e) {
-              navigate('/results');
+              // API failed, navigate to assessment page instead
+              navigate('/assess');
             }
           }}
           className={`w-full mt-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${

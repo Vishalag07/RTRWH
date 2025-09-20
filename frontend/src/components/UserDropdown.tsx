@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  location?: string;
 }
 
 interface UserDropdownProps {

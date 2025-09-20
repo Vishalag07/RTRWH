@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../components/ThemeProvider';
-import { FiUser, FiMail, FiCalendar, FiMapPin, FiSettings, FiKey, FiBell, FiShield, FiDownload, FiEdit3, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
+import { FiUser, FiMail, FiCalendar, FiMapPin, FiSettings, FiKey, FiBell, FiShield, FiDownload, FiEdit3, FiCheckCircle, FiAlertTriangle, FiLoader } from 'react-icons/fi';
+import { getCurrentLocation, getLocationErrorText, GeolocationError } from '../utils/geolocation';
 
 const User: React.FC = () => {
   const { user, updateUser, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -11,6 +12,13 @@ const User: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState<string>('');
+  const [editEmail, setEditEmail] = useState<string>('');
+  const [editLocation, setEditLocation] = useState<string>('');
+  const [emailError, setEmailError] = useState<string>('');
+  const [toast, setToast] = useState<{ visible: boolean; message: string; variant: 'success' | 'error' }>({ visible: false, message: '', variant: 'success' });
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState<boolean>(false);
 
   // Redirect if not authenticated (only after auth loading is complete)
   useEffect(() => {
@@ -18,6 +26,26 @@ const User: React.FC = () => {
       navigate('/auth?mode=login');
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  useEffect(() => {
+    setEditName(user?.name || '');
+    setEditEmail(user?.email || '');
+    setEditLocation(user?.location || '');
+  }, [user]);
+
+  const handleFetchLocation = async () => {
+    setIsFetchingLocation(true);
+    try {
+      const locationData = await getCurrentLocation();
+      setEditLocation(locationData.city);
+    } catch (error) {
+      const errorMessage = getLocationErrorText(error as GeolocationError);
+      setToast({ visible: true, message: errorMessage, variant: 'error' });
+      setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+    } finally {
+      setIsFetchingLocation(false);
+    }
+  };
 
   // Show loading while auth is being checked
   if (authLoading) {
@@ -50,19 +78,6 @@ const User: React.FC = () => {
     { id: 'notifications', label: 'Notifications', icon: FiBell },
     { id: 'billing', label: 'Billing', icon: FiKey }
   ];
-
-  const [editName, setEditName] = useState<string>('');
-  const [editEmail, setEditEmail] = useState<string>('');
-  const [editLocation, setEditLocation] = useState<string>('');
-  const [emailError, setEmailError] = useState<string>('');
-  const [toast, setToast] = useState<{ visible: boolean; message: string; variant: 'success' | 'error' }>({ visible: false, message: '', variant: 'success' });
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-
-  useEffect(() => {
-    setEditName(user?.name || '');
-    setEditEmail(user?.email || '');
-    setEditLocation(user?.location || '');
-  }, [user]);
 
   const handleSaveProfile = async () => {
     setEmailError('');
@@ -310,22 +325,42 @@ const User: React.FC = () => {
                         }`}>
                           Location
                         </label>
-                        <input
-                          type="text"
-                          value={editLocation}
-                          onChange={(e) => setEditLocation(e.target.value)}
-                          placeholder="Enter your location"
-                          disabled={!isEditing}
-                          className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
-                            isEditing
-                              ? isDark
-                                ? 'bg-slate-700 border-slate-600 text-slate-100 focus:border-blue-500'
-                                : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
-                              : isDark
-                                ? 'bg-slate-800/50 border-slate-700 text-slate-400'
-                                : 'bg-slate-100 border-slate-200 text-slate-500'
-                          }`}
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={editLocation}
+                            onChange={(e) => setEditLocation(e.target.value)}
+                            placeholder="Enter your city"
+                            disabled={!isEditing}
+                            className={`w-full px-4 py-3 pr-12 rounded-xl border transition-all duration-200 ${
+                              isEditing
+                                ? isDark
+                                  ? 'bg-slate-700 border-slate-600 text-slate-100 focus:border-blue-500'
+                                  : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
+                                : isDark
+                                  ? 'bg-slate-800/50 border-slate-700 text-slate-400'
+                                  : 'bg-slate-100 border-slate-200 text-slate-500'
+                            }`}
+                          />
+                          {isEditing && (
+                            <button
+                              type="button"
+                              onClick={handleFetchLocation}
+                              disabled={isFetchingLocation}
+                              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              aria-label="Auto-fetch location"
+                            >
+                              {isFetchingLocation ? (
+                                <FiLoader className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FiMapPin className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <p className="mt-1 text-xs text-slate-500">Click the location icon to auto-detect your city</p>
+                        )}
                       </div>
 
                       <div>

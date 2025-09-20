@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from app.settings import get_settings
-from app.routers import auth, assessments, gis, reports, chat, rain_prediction, aquifer, groundwater, soil, weather, nasa_power
+from app.routers import auth, assessments, gis, reports, chat, rain_prediction, aquifer, soil, weather, nasa_power
 from app.db import engine, Base
 from app import models  # noqa: F401  ensure models are imported for metadata
 from app.middleware import RateLimiter, SecurityHeadersMiddleware
@@ -48,7 +48,7 @@ app.include_router(reports.router, prefix=settings.api_prefix, tags=["reports"])
 app.include_router(chat.router, prefix=settings.api_prefix, tags=["chat"])
 app.include_router(rain_prediction.router, prefix=f"{settings.api_prefix}/rain-prediction", tags=["rain-prediction"])
 app.include_router(aquifer.router, prefix=settings.api_prefix, tags=["aquifer"])
-app.include_router(groundwater.router, prefix=f"{settings.api_prefix}/gamification", tags=["gamification"])
+app.include_router(aquifer.router, prefix=f"{settings.api_prefix}/groundwater", tags=["groundwater"])
 app.include_router(soil.router, prefix=settings.api_prefix, tags=["soil"])
 app.include_router(weather.router, prefix=settings.api_prefix, tags=["weather"])
 app.include_router(nasa_power.router, prefix=f"{settings.api_prefix}/nasa-power", tags=["nasa-power"])

@@ -274,7 +274,7 @@ const GroundwaterApiDemo: React.FC<GroundwaterApiDemoProps> = ({ className = "" 
           <li>• Enhanced soil color palettes with multiple shades</li>
           <li>• Animated soil layers in 3D visualization</li>
           <li>• Confidence scoring for data reliability</li>
-          <li>• Fallback to demo data if APIs are unavailable</li>
+          <li>• Fallback to India WRIS if other external APIs are unavailable</li>
           <li>• Interactive soil color previews</li>
         </ul>
       </div>

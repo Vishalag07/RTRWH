@@ -19,7 +19,7 @@ def create_database_engine():
     """Create database engine with fallback to SQLite"""
     try:
         # Try PostgreSQL first
-        database_url = settings.database_url or "postgresql+psycopg://postgres:postgres@db:5432/rtrwh"
+        database_url = settings.database_url or "postgresql+psycopg://postgres:postgres@localhost:5432/rtrwh"
         engine = create_engine(database_url, echo=False, future=True)
         
         # Test the connection

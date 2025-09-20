@@ -126,7 +126,7 @@ from app.schemas import (
     GWDepthPointOut, GWDepthPointCreate, GWDepthResponse, LocationRequest
 )
 from app.settings import get_settings
-@router.get("/groundwater", tags=["groundwater"])
+@router.get("/info", tags=["groundwater"])
 async def get_groundwater_info(
     lat: float = Query(..., description="Latitude"),
     lon: float = Query(..., description="Longitude")
@@ -162,49 +162,10 @@ async def get_groundwater_info(
             "last_updated": str(date.today())
         }
     return data
-
 
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-# --- New endpoint for groundwater & aquifer info (mock) ---
-@router.get("/groundwater", tags=["groundwater"])
-async def get_groundwater_info(
-    lat: float = Query(..., description="Latitude"),
-    lon: float = Query(..., description="Longitude")
-):
-    """
-    Fetch groundwater and aquifer info for a given lat/lon (mocked for MVP)
-    """
-    # Mock dataset keyed by (lat, lon)
-    mock_data = {
-        (12.9716, 77.5946): {
-            "location": "Bengaluru Urban",
-            "groundwater_level_m": 12.5,
-            "aquifer_type": "Unconfined Aquifer",
-            "borewells_connected": 154,
-            "last_updated": "2025-09-01"
-        },
-        (28.6139, 77.2090): {
-            "location": "New Delhi",
-            "groundwater_level_m": 22.1,
-            "aquifer_type": "Confined Aquifer",
-            "borewells_connected": 320,
-            "last_updated": "2025-08-20"
-        },
-    }
-    key = (round(lat, 4), round(lon, 4))
-    data = mock_data.get(key)
-    if not data:
-        data = {
-            "location": "Unknown",
-            "groundwater_level_m": 18.2,
-            "aquifer_type": "Confined Aquifer",
-            "borewells_connected": 75,
-            "last_updated": str(date.today())
-        }
-    return data
 
 
 @router.get("/", response_model=List[GWDepthPointOut])

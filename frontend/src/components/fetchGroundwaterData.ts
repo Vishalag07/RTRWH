@@ -3,7 +3,7 @@ import { api } from '../services/api';
 
 export default async function fetchGroundwaterData(lat: number, lon: number): Promise<GroundwaterData> {
   try {
-    const res = await api.get('/groundwater', { params: { lat, lon } });
+    const res = await api.get('/groundwater/info', { params: { lat, lon } });
     // Adjust the mapping below to match your backend response structure
     return res.data as GroundwaterData;
   } catch (err: any) {

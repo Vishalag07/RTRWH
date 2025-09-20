@@ -10,7 +10,7 @@ if (typeof window !== 'undefined') {
   // Runtime environment (browser)
   API_BASE = (window as any).ENV?.VITE_API_BASE || 'http://localhost:8000/api';
   // Use mock API if backend is not available
-  USE_MOCK_API = !API_BASE.includes('localhost:8000') || window.location.hostname !== 'localhost';
+  USE_MOCK_API = !API_BASE.includes('localhost:8000') && !API_BASE.includes('rtrwh-backend:8000');
 } else {
   // Build time / test environment
   API_BASE = process.env.VITE_API_BASE || 'http://localhost:8000/api';
@@ -20,15 +20,40 @@ if (typeof window !== 'undefined') {
 // Create API instance with error handling
 export const api = axios.create({ 
   baseURL: API_BASE,
-  timeout: 5000 // 5 second timeout
+  timeout: 15000 // 15 second timeout - increased for better reliability
 })
+
+// Add request interceptor to log API calls
+api.interceptors.request.use(
+  (config) => {
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   (error) => {
-    console.warn('API call failed, using mock data:', error.message);
-    // Return a mock response instead of throwing
+    // Provide more specific error information
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      console.warn(`API call timed out after ${error.config?.timeout || 15000}ms:`, error.config?.url);
+    } else {
+      console.warn('API call failed:', error.message, 'URL:', error.config?.url);
+    }
+    
+    // For assessment endpoints, return null to trigger proper error handling
+    if (error.config?.url?.includes('/assessments/')) {
+      return Promise.reject(error);
+    }
+    // Return a mock response for other endpoints
     return Promise.resolve({ data: {} });
   }
 )
@@ -56,7 +81,7 @@ export const fetchMe = async () => {
 		const { data } = await api.get('/auth/me')
 		return data
 	} catch (error) {
-		console.warn('fetchMe failed, using mock data');
+		console.warn('fetchMe failed, using fallback data');
 		return {
 			id: '1',
 			name: 'Demo User',
@@ -72,7 +97,7 @@ export const updateMe = async (payload: { name?: string; email?: string }) => {
 		const { data } = await api.put('/auth/me', payload)
 		return data
 	} catch (error) {
-		console.warn('updateMe failed, using mock data');
+		console.warn('updateMe failed, using fallback data');
 		return { success: true };
 	}
 }

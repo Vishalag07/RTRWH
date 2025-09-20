@@ -63,38 +63,60 @@ A comprehensive full-stack application for on-spot assessment of **Rooftop Rainw
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Git
+- **Python 3.11+** (recommended) or Python 3.13
+- **Node.js 18+** and npm
+- **Docker and Docker Compose** (optional, for containerized deployment)
+- **Git**
 
-### 1. Clone the Repository
+### Option 1: Docker Deployment (Recommended)
 ```bash
+# 1. Clone the repository
 git clone <repository-url>
 cd RTRWH
-```
 
-### 2. Environment Setup
-```bash
-# Copy environment template
+# 2. Environment setup
 cp .env.example .env
+# Edit .env with your configuration
 
-# Edit environment variables
-nano .env
-```
-
-### 3. Start the Application
-```bash
-# Build and start all services
+# 3. Start all services
 docker compose up -d --build
 
-# View logs
+# 4. View logs
 docker compose logs -f
 ```
 
+### Option 2: Local Development Setup
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd RTRWH
+
+# 2. Backend setup
+cd backend
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+
+# 3. Frontend setup
+cd ../frontend
+npm install
+
+# 4. Start backend (in one terminal)
+cd backend
+.venv\Scripts\uvicorn.exe app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 5. Start frontend (in another terminal)
+cd frontend
+npm run dev
+```
+
 ### 4. Access the Application
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:3000 (Docker) or http://localhost:5173 (Local)
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
-- **Database**: localhost:5432
+- **Database**: localhost:5432 (Docker only)
 
 ## 📁 Project Structure
 
@@ -208,6 +230,109 @@ cd backend && python -m pytest
 - ✅ Authentication flow
 - ✅ API endpoints
 - ✅ Frontend components
+
+## 🔧 Troubleshooting
+
+### **Common Issues & Solutions**
+
+#### **Python 3.13 Compatibility Issues**
+```bash
+# Error: numpy==1.24.3 not compatible with Python 3.13
+# Solution: Updated requirements.txt with compatible versions
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
+#### **Backend Import Errors**
+```bash
+# Error: Cannot import 'setuptools.build_meta'
+# Solution: Upgrade build tools
+pip install --upgrade pip setuptools wheel
+
+# Error: ModuleNotFoundError for numpy/pandas
+# Solution: Install with compatible versions
+pip install "numpy>=1.26.0" "pandas>=2.1.0"
+```
+
+#### **Frontend Build Issues**
+```bash
+# Error: Node modules not found
+# Solution: Clean install
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+
+# Error: Vite build fails
+# Solution: Check Node.js version (requires 18+)
+node --version
+npm --version
+
+# Error: Dynamic import failed - port mismatch
+# Solution: Clear cache and restart
+cd frontend
+Remove-Item -Recurse -Force dist, node_modules\.vite -ErrorAction SilentlyContinue
+npm run dev
+
+# Error: Port 3000 conflicts with Vite (uses 5173)
+# Solution: Kill conflicting processes
+netstat -ano | findstr :3000
+taskkill /F /PID <PID_NUMBER>
+```
+
+#### **Docker Build Issues**
+```bash
+# Error: pip install timeout during Docker build
+# Solution: Use optimized Dockerfile with retry logic
+docker build --no-cache -t rtrwh-backend ./backend
+
+# Error: Network timeout downloading packages
+# Solution: Increase timeout and use retry logic
+export PIP_TIMEOUT=300
+export PIP_DEFAULT_TIMEOUT=300
+docker compose build --no-cache
+
+# Error: Build context too large
+# Solution: Use .dockerignore to reduce context
+# Check .dockerignore file exists in backend/
+
+# Error: Multi-stage build fails
+# Solution: Build with verbose output
+docker build --progress=plain -t rtrwh-backend ./backend
+```
+
+#### **Database Connection Issues**
+```bash
+# Error: PostgreSQL connection failed
+# Solution: Check Docker services
+docker compose ps
+docker compose logs db
+
+# Error: Database not found
+# Solution: Initialize database
+docker compose exec backend alembic upgrade head
+```
+
+#### **Port Conflicts**
+```bash
+# Error: Port 8000 already in use
+# Solution: Use different port
+uvicorn app.main:app --reload --port 8001
+
+# Error: Port 3000 already in use
+# Solution: Use different port
+npm run dev -- --port 3001
+```
+
+#### **API Connection Issues**
+```bash
+# Error: CORS policy blocks requests
+# Solution: Check allowed origins in settings.py
+# Update ALLOWED_ORIGINS with your frontend URL
+
+# Error: Rate limit exceeded
+# Solution: Wait or increase limits in settings.py
+# Set RATE_LIMIT_REQUESTS to higher value
+```
 
 ## 🌐 API Documentation
 
