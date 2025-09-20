@@ -2,58 +2,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies for native modules
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    musl-dev \
-    giflib-dev \
-    pixman-dev \
-    pangomm-dev \
-    libjpeg-turbo-dev \
-    freetype-dev
-
-# Copy package files
 COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
-# Install dependencies
-RUN npm ci --no-audit --no-fund --only=production
-
-# Copy source code
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_API_BASE=http://localhost:8000/api
-ARG VITE_APP_NAME=RTRWH
-ARG VITE_APP_VERSION=1.0.0
-
-# Set environment variables
-ENV VITE_API_BASE=$VITE_API_BASE
-ENV VITE_APP_NAME=$VITE_APP_NAME
-ENV VITE_APP_VERSION=$VITE_APP_VERSION
-
-# Build the application
+# Build the app
 RUN npm run build
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1
-
-EXPOSE 3000 5173
-
-# Use development mode for better error messages and hot reload
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+EXPOSE 3000
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]
 
 
