@@ -11,6 +11,8 @@ interface EnhancedRainwaterSchematicProps {
   autoPlay?: boolean;
   loopDuration?: number;
   dataUpdateInterval?: number;
+  initialData?: GroundwaterData; // Prefetched data to avoid extra API request
+  disableAutoFetch?: boolean; // If true, do not fetch internally
 }
 
 interface AnimationState {
@@ -30,7 +32,9 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
   showControls = true,
   autoPlay = true,
   // loopDuration will be calculated dynamically based on phase duration
-  dataUpdateInterval = 30000
+  dataUpdateInterval = 30000,
+  initialData,
+  disableAutoFetch = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
@@ -94,11 +98,7 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
           waterLevel: response.data!.groundwater.level_m
         }));
         
-        console.log('Enhanced groundwater data updated:', {
-          source: response.source,
-          level: response.data.groundwater.level_m,
-          location: response.data.location.name
-        });
+        // removed debug log
       } else {
         throw new Error(response.error || 'Failed to fetch groundwater data');
       }
@@ -111,23 +111,33 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
     }
   }, [lat, lon]);
 
-  // Initial data fetch
+  // Initialize from prefetched data or fetch internally
   useEffect(() => {
-    fetchGroundwaterData();
-  }, [fetchGroundwaterData]);
+    if (initialData) {
+      setGroundwaterData(initialData);
+      setDataSource(`${initialData.metadata.data_source}`);
+      setAnimationState(prev => ({
+        ...prev,
+        baseWaterLevel: initialData.groundwater.level_m,
+        waterLevel: initialData.groundwater.level_m
+      }));
+    } else if (!disableAutoFetch) {
+      fetchGroundwaterData();
+    }
+  }, [initialData, disableAutoFetch, fetchGroundwaterData]);
 
   // Auto-update data at intervals
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      if (now - lastDataUpdateRef.current >= dataUpdateInterval) {
+      if (!disableAutoFetch && now - lastDataUpdateRef.current >= dataUpdateInterval) {
         fetchGroundwaterData();
         lastDataUpdateRef.current = now;
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchGroundwaterData, dataUpdateInterval]);
+  }, [fetchGroundwaterData, dataUpdateInterval, disableAutoFetch]);
 
   // Enhanced animation loop with realistic water flow phases
   useEffect(() => {
@@ -475,15 +485,7 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
         const totalCycleTime = loopDuration;
         const cycleTime = (animationState.currentTime * animationSettings.speed) % totalCycleTime;
         
-        // Debug: Log cycle completion and settings
-        if (Math.floor(cycleTime) === 0 && animationState.currentTime > 1) {
-          console.log('Animation cycle completed, restarting at cycleTime:', cycleTime, {
-            speed: animationSettings.speed,
-            phaseDuration: animationSettings.phaseDuration,
-            loopDuration: loopDuration,
-            autoLoop: animationSettings.autoLoop
-          });
-        }
+        // removed debug cycle completion log
         
         // Phase 1: Rooftop to desilting pit
         if (cycleTime <= animationSettings.phaseDuration) {
@@ -572,10 +574,7 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
         
         // Phase 3: Recharge well to borewell
         if (cycleTime > animationSettings.phaseDuration * 2 && cycleTime <= animationSettings.phaseDuration * 3) {
-          // Debug: Log phase 3 activation
-          if (Math.floor(cycleTime) === 17) {
-            console.log('Phase 3 started at cycleTime:', cycleTime);
-          }
+          // Phase 3 activation
           // Keep previous components full
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
@@ -651,20 +650,13 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
         
         // Phase 4: Borewell to service borewell to aquifer
         if (cycleTime > animationSettings.phaseDuration * 3) {
-          // Debug: Log phase 4 activation
-          if (Math.floor(cycleTime) === 25) {
-            console.log('Phase 4 started at cycleTime:', cycleTime);
-          }
-          // Keep desilting pit full and fill recharge well completely
+          // Phase 4 activation
+          // Keep desilting pit full and keep recharge well full (no progressive filling in Phase 4)
           ctx.fillStyle = '#87CEEB';
           ctx.globalAlpha = 0.8;
           ctx.fillRect(pit.x + 5, pit.y + 5, pit.width - 10, pit.height - 10);
-          
-          // Fill recharge well completely in Phase 4 (simultaneously with pipe flow)
-          const rechargeWellFillProgress = Math.min(1, (cycleTime - animationSettings.phaseDuration * 3) / animationSettings.phaseDuration); // Fill completely over the entire Phase 4 duration
           const fullRechargeWellLevel = rechargeWell.height - 10;
-          const rechargeWellWaterLevel = Math.min(fullRechargeWellLevel, rechargeWellFillProgress * fullRechargeWellLevel);
-          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + rechargeWell.height - rechargeWellWaterLevel, rechargeWell.width - 10, rechargeWellWaterLevel);
+          ctx.fillRect(rechargeWell.x + 5, rechargeWell.y + rechargeWell.height - fullRechargeWellLevel, rechargeWell.width - 10, fullRechargeWellLevel);
           
           // Fill borewell to full level with water flowing from internal pipe
           const phase4Progress = (cycleTime - animationSettings.phaseDuration * 3) / animationSettings.phaseDuration;
@@ -879,7 +871,7 @@ const EnhancedRainwaterSchematic: React.FC<EnhancedRainwaterSchematicProps> = ({
           phaseText = 'Phase 3: Recharge Pit/Trench/Shaft → Recharge Well (Up to Pipe Level)';
           phaseColor = '#4A90E2';
         } else {
-          phaseText = 'Phase 4: Recharge Well Fills + Pipe Water Flows';
+          phaseText = 'Phase 4: Recharge Pit/Trench/Shaft Full + Pipe Water Flows';
           phaseColor = '#4A90E2';
         }
         

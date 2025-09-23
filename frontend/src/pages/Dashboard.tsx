@@ -243,7 +243,7 @@ function Dashboard() {
               {/* Spacer under weather for visual balance */}
               <div className="h-1" />
               
-              {/* Heatmap Analysis Panel (expanded to use remaining space) */}
+              {/* Subsidy Panel (replacing Heatmap Analysis) */}
               <div className={`rounded-2xl border backdrop-blur-sm ${
                 isDark 
                   ? 'bg-slate-800/50 border-slate-700/50' 
@@ -252,48 +252,45 @@ function Dashboard() {
                 style={{ minHeight: '260px' }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <span className="text-xl">🗺️</span>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <span className="text-xl">🏷️</span>
                   </div>
                   <div>
                     <h3 className={`text-lg font-bold ${
                       isDark ? 'text-slate-100' : 'text-slate-900'
                     }`}>
-                      Heatmap Analysis
+                      Subsidy & Schemes
                     </h3>
                     <p className={`text-sm ${
                       isDark ? 'text-slate-400' : 'text-slate-600'
                     }`}>
-                      Groundwater depth visualization
+                      Explore available government benefits
                     </p>
                   </div>
                 </div>
-                
                 <div className={`text-sm mb-5 ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
                 }`}>
                   <p className="mb-2">
-                    Analyze groundwater depth patterns across your region using interactive heatmaps. 
-                    Visualize water table variations and identify optimal locations for water collection.
+                    Find subsidies and schemes for groundwater recharge, drip irrigation, and rainwater harvesting.
                   </p>
                   <p className="text-xs opacity-75">
-                    Get insights into seasonal changes, depth trends, and regional water availability.
+                    Learn eligibility, documentation, and how to apply.
                   </p>
                 </div>
-
                 <motion.button
-                  onClick={() => navigate('/heatmapanalysis')}
+                  onClick={() => navigate('/subsidy')}
                   className={`w-full px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                     isDark 
-                      ? 'bg-gradient-to-r from-purple-200/80 to-pink-200/80 hover:from-purple-300/90 hover:to-pink-300/90 text-purple-900' 
-                      : 'bg-gradient-to-r from-purple-100/80 to-pink-100/80 hover:from-purple-200/90 hover:to-pink-200/90 text-purple-800'
+                      ? 'bg-gradient-to-r from-emerald-200/80 to-green-200/80 hover:from-emerald-300/90 hover:to-green-300/90 text-emerald-900' 
+                      : 'bg-gradient-to-r from-emerald-100/80 to-green-100/80 hover:from-emerald-200/90 hover:to-green-200/90 text-emerald-800'
                   } shadow-lg`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <FiMap className="w-4 h-4" />
-                    Analyze Heatmap
+                    <FiTarget className="w-4 h-4" />
+                    View Subsidies
                   </div>
                 </motion.button>
               </div>

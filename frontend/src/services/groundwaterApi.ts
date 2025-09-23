@@ -128,7 +128,9 @@ class GroundwaterApiService {
           },
           groundwater: {
             level_m: data.groundwater_level_m || this.generateRealisticDepth(lat, lon),
-            depth_m: data.groundwater_level_m || this.generateRealisticDepth(lat, lon),
+            depth_m: (typeof data.water_table_depth_m === 'number' && !Number.isNaN(data.water_table_depth_m))
+              ? data.water_table_depth_m
+              : (data.groundwater_level_m || this.generateRealisticDepth(lat, lon)) + 3,
             quality: 'Good',
             last_updated: data.last_updated || new Date().toISOString(),
             source: 'CGWB API'

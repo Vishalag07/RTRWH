@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
       { label: 'Assessment', href: '/assess' },
       { label: 'Rainfall Prediction', href: '/predict' },
       { label: 'Visualization', href: '/dashboard' },
-      { label: 'Heatmap Analysis', href: '/heatmapanalysis' }
+      { label: 'Subsidy', href: '/subsidy' }
     ],
     company: [
       { label: 'About Us', href: '#about' },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import { useTheme } from '../components/ThemeProvider';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 import { useAuth } from '../contexts/AuthContext';
+import { FiCamera, FiX } from 'react-icons/fi';
 
 export function Assessment() {
   const { t } = useTranslation();
@@ -25,6 +26,12 @@ export function Assessment() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [preview, setPreview] = useState({ estimated_collection_m3: 0, per_capita_m3: 0 });
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [showScanner, setShowScanner] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [estimatedArea, setEstimatedArea] = useState<number | null>(null);
 
   // Redirect if not authenticated (only after auth loading is complete)
   useEffect(() => {
@@ -148,6 +155,65 @@ export function Assessment() {
       estimated_collection_m3: Number(estimate.toFixed(2)),
       per_capita_m3: Number(perCapita.toFixed(2)),
     });
+  };
+
+  // Rooftop scanner camera lifecycle
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        mediaStreamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      } catch (e) {
+        console.warn('Camera access denied or unavailable', e);
+      }
+    };
+    const stopCamera = () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+    if (showScanner) startCamera(); else stopCamera();
+    return () => stopCamera();
+  }, [showScanner]);
+
+  const handleCaptureRooftop = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    setIsCapturing(true);
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(video, 0, 0, w, h);
+      const img = ctx.getImageData(0, 0, w, h);
+      let dark = 0;
+      const total = w * h;
+      const data = img.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (luminance < 140) dark++;
+      }
+      const coverage = Math.min(1, Math.max(0, dark / total));
+      const areaM2 = Math.round(coverage * 200);
+      setEstimatedArea(areaM2);
+      // Autofill rooftop area field
+      handleFormChange('rooftop_area_m2', areaM2);
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
   const getCityName = async (lat: number, lon: number): Promise<string> => {
@@ -493,20 +559,31 @@ export function Assessment() {
                 <label htmlFor="rooftop_area_m2" className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('rooftop_area')} <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  id="rooftop_area_m2" 
-                  name="rooftop_area_m2" 
-                  type="number" 
-                  min="0.1"
-                  max="10000"
-                  step="0.1"
-                  value={form.rooftop_area_m2} 
-                  onChange={(e) => handleFormChange(e.target.name, e.target.value)} 
-                  placeholder="m²" 
-                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.rooftop_area_m2 ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'}`} 
-                  aria-label={t('aria.rooftop_area')} 
-                  required
-                />
+                <div className="flex gap-3">
+                  <input 
+                    id="rooftop_area_m2" 
+                    name="rooftop_area_m2" 
+                    type="number" 
+                    min="0.1"
+                    max="10000"
+                    step="0.1"
+                    value={form.rooftop_area_m2} 
+                    onChange={(e) => handleFormChange(e.target.name, e.target.value)} 
+                    placeholder="m²" 
+                    className={`flex-1 w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.rooftop_area_m2 ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'}`} 
+                    aria-label={t('aria.rooftop_area')} 
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowScanner(true)} 
+                    className="px-4 py-3 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-blue-300 text-sm font-semibold transition-all duration-200 flex items-center gap-2"
+                    aria-label="Open rooftop scanner"
+                    title="Scan rooftop using camera"
+                  >
+                    <FiCamera className="w-4 h-4" />
+                  </button>
+                </div>
                 {fieldErrors.rooftop_area_m2 && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.rooftop_area_m2}</p>
                 )}
@@ -594,6 +671,46 @@ export function Assessment() {
         </div>
       </div>
       {/* Voice assistant UI available globally in navbar */}
+      {showScanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-white border border-slate-200">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/50">
+              <div className="text-slate-900 font-semibold">Rooftop Scanner (Beta)</div>
+              <button onClick={() => setShowScanner(false)} className="text-slate-600 hover:text-slate-900">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="relative rounded-lg overflow-hidden border border-slate-200/60">
+                <video ref={videoRef} className="w-full h-64 object-cover bg-black" playsInline muted />
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+              <div className="text-xs text-slate-500">
+                Tip: Keep the rooftop in frame with good lighting for better estimate.
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  onClick={handleCaptureRooftop}
+                  disabled={isCapturing}
+                  className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {isCapturing ? 'Processing…' : 'Capture & Use'}
+                </button>
+                {estimatedArea != null && (
+                  <div className="text-emerald-700 text-sm font-semibold">
+                    Estimated: {estimatedArea} m²
+                  </div>
+                )}
+              </div>
+              {estimatedArea != null && (
+                <div className="text-xs text-slate-500">
+                  You can adjust the filled value manually if needed.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

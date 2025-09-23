@@ -19,10 +19,11 @@ const PredictionDashboard = lazy(() => import('./pages/PredictionDashboard'));
 const Auth = lazy(() => import('./pages/Auth'));
 const User = lazy(() => import('./pages/User'));
 const Chat = lazy(() => import('./pages/Chat'));
-const GroundwaterDepthAnalyzer = lazy(() => import('./pages/GroundwaterDepthAnalyzer'));
+// Removed heatmapanalysis page
 const VisualAquiferDepthDisplay = lazy(() => import('./pages/VisualAquiferDepthDisplay'));
 const Gamification = lazy(() => import('./pages/Gamification'));
 const GroundwaterApiDemo = lazy(() => import('./components/GroundwaterApiDemo'));
+const Subsidy = lazy(() => import('./pages/Subsidy'));
  
 
 const router = createBrowserRouter(
@@ -45,7 +46,7 @@ const router = createBrowserRouter(
             { path: 'assess', element: <Suspense fallback={<div>Loading...</div>}><Assessment /></Suspense> },
             { path: 'chat', element: <Suspense fallback={<div>Loading...</div>}><Chat /></Suspense> },
             { path: 'user', element: <Suspense fallback={<div>Loading...</div>}><User /></Suspense> },
-            { path: 'heatmapanalysis', element: <Suspense fallback={<div>Loading...</div>}><GroundwaterDepthAnalyzer /></Suspense> },
+            { path: 'subsidy', element: <Suspense fallback={<div>Loading...</div>}><Subsidy /></Suspense> },
             { path: 'aquifer-visualization', element: <Suspense fallback={<div>Loading...</div>}><VisualAquiferDepthDisplay /></Suspense> },
           ]
         },
@@ -53,7 +54,7 @@ const router = createBrowserRouter(
         { path: '/auth', element: <Suspense fallback={<div>Loading...</div>}><Auth /></Suspense> },
         { path: '/user', element: <Suspense fallback={<div>Loading...</div>}><User /></Suspense> },
         { path: '/chat', element: <Suspense fallback={<div>Loading...</div>}><Chat /></Suspense> },
-        { path: '/heatmapanalysis', element: <Suspense fallback={<div>Loading...</div>}><GroundwaterDepthAnalyzer /></Suspense> },
+        { path: '/subsidy', element: <Suspense fallback={<div>Loading...</div>}><Subsidy /></Suspense> },
         { path: '/aquifer-visualization', element: <Suspense fallback={<div>Loading...</div>}><VisualAquiferDepthDisplay /></Suspense> },
         { path: '/gamification', element: <Suspense fallback={<div>Loading...</div>}><Gamification /></Suspense> },
         { path: '/api-demo', element: <Suspense fallback={<div>Loading...</div>}><GroundwaterApiDemo /></Suspense> },
